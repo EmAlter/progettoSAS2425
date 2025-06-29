@@ -27,7 +27,7 @@ Thumbs.db
 *.tmp
 *.temp
 
-# Database locale (se usi SQLite per test)
+# Database locale
 *.db
 *.sqlite
 *.sqlite3
