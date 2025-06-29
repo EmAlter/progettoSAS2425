@@ -12,7 +12,7 @@ import java.util.Set;
 public class User {
 
     public static enum Role {
-        CUOCO, CHEF, ORGANIZZATORE, SERVIZIO
+        CUOCO, CHEF, ORGANIZZATORE, SERVIZIO, PROPRIETARIO
     };
 
     private int id;
@@ -35,6 +35,14 @@ public class User {
 
     public boolean isChef() {
         return roles.contains(Role.CHEF);
+    }
+
+    public boolean isOrganizer() {
+        return roles.contains(Role.ORGANIZZATORE);
+    }
+
+    public boolean isOwner() {
+        return roles.contains(Role.PROPRIETARIO);
     }
 
     public String getUserName() {
@@ -190,6 +198,9 @@ public class User {
                     case 3:
                         u.roles.add(User.Role.SERVIZIO);
                         break;
+                    case 4:
+                        u.roles.add(User.Role.PROPRIETARIO);
+                        break;
                 }
             }
         }, u.id); // Pass u.id as parameter
@@ -292,6 +303,8 @@ public class User {
                 return "o";
             case SERVIZIO:
                 return "s";
+            case PROPRIETARIO:
+                return "p";
             default:
                 return "";
         }
