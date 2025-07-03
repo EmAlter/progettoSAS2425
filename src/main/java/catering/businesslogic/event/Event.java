@@ -6,6 +6,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
+import catering.businesslogic.staff.Role;
+import catering.businesslogic.staff.Staff;
 import catering.businesslogic.user.User;
 import catering.persistence.PersistenceManager;
 import catering.persistence.ResultHandler;
@@ -24,9 +26,11 @@ public class Event {
     private Date dateEnd;
     private User chef;
     private ArrayList<Service> services;
+    private EventStaffSheet staffSheet;
 
     public Event() {
         services = new ArrayList<>();
+        staffSheet = EventStaffSheet.create();
     }
 
     public Event(String name) {
@@ -89,6 +93,41 @@ public class Event {
 
     public void setServices(ArrayList<Service> services) {
         this.services = services;
+    }
+
+    // Staff sheet management
+    public EventStaffSheet getStaffSheet() {
+        if (staffSheet == null) {
+            staffSheet = EventStaffSheet.create();
+        }
+        return staffSheet;
+    }
+
+    public void addRoleToSheet(Role role) {
+        if (staffSheet.containsRole(role)) {
+            LOGGER.fine("Role already exists in staff sheet of event '" + id + "': " + role.getType());
+        } else {
+            staffSheet.addRole(role);
+            LOGGER.info("Added role to staff sheet of event '" + id + "': " + role.getType());
+        }
+    }
+
+    public void assignStaffToRole(Role role, Staff staff) {        
+        staffSheet.assignStaffToRole(role, staff);
+    }
+
+    public void removeAssignmentFromRole(Role role, Staff staff) {
+        if (staffSheet.containsRole(role)) {
+            staffSheet.removeStaffFromRole(role, staff);
+            LOGGER.info("Removed assignment of " + staff.getName() + " from role " + role.getType() + " in event '" + id + "'");
+        } else {
+            LOGGER.warning("Role " + role.getType() + " does not exist in staff sheet of event '" + id + "'");
+        }
+    }
+
+    public void addNotesToStaffSheet(String note) {
+        staffSheet.setNote(note);
+        LOGGER.info("Added note to staff sheet of event '" + id + "': " + note);
     }
 
     // Service management

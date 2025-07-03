@@ -23,4 +23,10 @@ public interface EventReceiver {
     void updateMenuAssigned(Service service, Menu menu);
 
     void updateMenuRemoved(Service service);
+
+    /** TODO: 
+     * Aggiungere metodi update per tutte le modifiche a EventStaffSheet.
+     * Questi metodi possono essere implementati in modo simile a quelli esistenti,
+     * notificando i cambiamenti agli EventReceiver registrati.
+     */
 }
