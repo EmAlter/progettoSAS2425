@@ -10,7 +10,6 @@ import java.util.logging.Logger;
 import catering.businesslogic.UseCaseLogicException;
 import catering.businesslogic.menu.Menu;
 import catering.businesslogic.staff.HolidayRequest;
-import catering.businesslogic.event.Role;
 import catering.businesslogic.staff.Staff;
 import catering.businesslogic.staff.StaffEventReceiver;
 import catering.businesslogic.user.User;
@@ -127,7 +126,8 @@ public class EventManager implements StaffEventReceiver{
      *         selected
      */
     public EventStaffSheet getCurrentEventStaffSheet() {
-        return (selectedEvent != null) ? selectedEvent.getStaffSheet() : null;
+        
+        
     }
 
     /**
@@ -137,9 +137,8 @@ public class EventManager implements StaffEventReceiver{
      */
     public List<EventStaffSheet> getAllEventSheets() {
         List<EventStaffSheet> sheets = new ArrayList<>();
-        for (Event event : getEvents()) {
-            sheets.add(event.getStaffSheet());
-        }
+        
+        
         return sheets;
     }
 
@@ -155,8 +154,6 @@ public class EventManager implements StaffEventReceiver{
             String msg = "Cannot add notes: no event selected";
             LOGGER.warning(msg);
         }
-
-        selectedEvent.addNotesToStaffSheet(note);
         // TODO: Notify all receivers
     }
 
@@ -169,7 +166,7 @@ public class EventManager implements StaffEventReceiver{
             LOGGER.warning(msg);
         }
 
-        selectedEvent.assignStaffToRole(r, s);
+    
         // TODO: Notify all receivers
     }
     
@@ -182,7 +179,7 @@ public class EventManager implements StaffEventReceiver{
             String msg = "Cannot remove assignment: no event selected";
             LOGGER.warning(msg);
         }
-        selectedEvent.removeAssignmentFromRole(r, s);
+        
         // TODO: Notify all receivers
     }
 
@@ -536,7 +533,6 @@ public class EventManager implements StaffEventReceiver{
             LOGGER.warning(msg);
         }
         
-        selectedEvent.addRoleToSheet(r);
         // TODO: Notify all receivers
     }
 

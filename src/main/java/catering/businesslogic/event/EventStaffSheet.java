@@ -14,7 +14,7 @@ public class EventStaffSheet {
     private static final Logger LOGGER = LogManager.getLogger(EventStaffSheet.class);
 
     private String note;
-    private Map<Role, Staff> assignments;
+    private List<Role> assignments;
 
     public static EventStaffSheet create() {
         EventStaffSheet sheet = new EventStaffSheet();
@@ -24,7 +24,7 @@ public class EventStaffSheet {
 
     public EventStaffSheet() {
         this.note = "";
-        this.assignments = new HashMap<>();
+        this.assignments = new ArrayList<>();
         LOGGER.fine("EventStaffSheet instance initialized");
     }
 

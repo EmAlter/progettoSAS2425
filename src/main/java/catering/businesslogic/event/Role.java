@@ -1,6 +1,8 @@
 package catering.businesslogic.event;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import catering.businesslogic.staff.JobType;
 import catering.businesslogic.staff.Staff;
@@ -33,4 +35,21 @@ public class Role {
     }
 
     // ... altri getter/setter
+
+
+/*public Ruolo trovaRuolo(JobType tipo, String descrizione) {
+    for (Ruolo r : schedaRiepilogativa.getRuoli()) {
+        if (r.getTipo() == tipo && r.getDescrizione().equalsIgnoreCase(descrizione)) {
+            return r;
+        }
+    }
+    return null;
+}
+
+List<Ruolo> ruoliNonAssegnati = sr.getRuoli().stream()
+    .filter(r -> r.getTipo() == JobType.CUOCO && !r.isAssegnato())
+    .collect(Collectors.toList());*/
+
+
+
 }
