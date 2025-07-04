@@ -26,7 +26,7 @@ public class EventManager implements StaffEventReceiver{
     private static final Logger LOGGER = LogManager.getLogger(EventManager.class);
 
     private ArrayList<EventReceiver> eventReceivers;
-    private Event selectedEvent;
+    private EventStaffSheet currentEventStaffSheet;
     private Service currentService;
 
     /**

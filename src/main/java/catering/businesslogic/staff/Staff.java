@@ -12,6 +12,7 @@ public abstract class Staff {
     private String fiscalCode;
     private int remainingDaysOff;
     private Set<Date> holidays;
+    private Set<EvaluationNote> evaluationNotes;
 
     /**
      * Costruttore della classe Staff.
@@ -32,6 +33,7 @@ public abstract class Staff {
         this.fiscalCode = fiscalCode;
         this.remainingDaysOff = 30; // Inizializza i giorni di ferie rimanenti a 30
         this.holidays = Set.of(); // Inizializza le ferie come un set vuoto
+        this.evaluationNotes = Set.of(); // Inizializza le note di valutazione come un set vuoto
     }
 
     public JobType getJobType() {
@@ -64,6 +66,10 @@ public abstract class Staff {
 
     public Set<Date> getHolidays() {
         return holidays;
+    }
+
+    public Set<EvaluationNote> getEvaluationNotes() {
+        return evaluationNotes;
     }
 
     public void setPermanent(boolean permanent) {
@@ -113,6 +119,13 @@ public abstract class Staff {
             throw new IllegalArgumentException("Holiday already exists");
         }
         holidays.add(holiday);
+    }
+
+    public void AddNote(EvaluationNote note) {
+        if (note == null) {
+            throw new IllegalArgumentException("Note cannot be null");
+        }
+        evaluationNotes.add(note);
     }
 
     public boolean isAvailable(Set<Date> dates) {
