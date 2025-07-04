@@ -126,8 +126,7 @@ public class EventManager implements StaffEventReceiver{
      *         selected
      */
     public EventStaffSheet getCurrentEventStaffSheet() {
-        
-        
+        return null; // TODO: Implement logic to return the staff sheet for the selected event
     }
 
     /**
@@ -137,7 +136,7 @@ public class EventManager implements StaffEventReceiver{
      */
     public List<EventStaffSheet> getAllEventSheets() {
         List<EventStaffSheet> sheets = new ArrayList<>();
-        
+        // TODO: Implement logic to retrieve all event staff sheets
         
         return sheets;
     }
@@ -154,6 +153,7 @@ public class EventManager implements StaffEventReceiver{
             String msg = "Cannot add notes: no event selected";
             LOGGER.warning(msg);
         }
+        // TODO: Implement logic to add note to the staff sheet of the selected event
         // TODO: Notify all receivers
     }
 
@@ -166,7 +166,7 @@ public class EventManager implements StaffEventReceiver{
             LOGGER.warning(msg);
         }
 
-    
+        // TODO: Implement logic to assign the role to the staff member
         // TODO: Notify all receivers
     }
     
@@ -179,7 +179,7 @@ public class EventManager implements StaffEventReceiver{
             String msg = "Cannot remove assignment: no event selected";
             LOGGER.warning(msg);
         }
-        
+        // TODO: Implement logic to remove the assignment of the staff member from the role
         // TODO: Notify all receivers
     }
 
@@ -208,6 +208,8 @@ public class EventManager implements StaffEventReceiver{
             // Set as selected event
             this.selectedEvent = event;
             this.currentService = null;
+
+            // TODO: Initialize the staff sheet for this event
 
             // Notify all receivers
             notifyEventCreated(event);

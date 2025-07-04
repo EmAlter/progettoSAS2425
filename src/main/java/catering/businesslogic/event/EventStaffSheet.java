@@ -1,9 +1,7 @@
 package catering.businesslogic.event;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -11,7 +9,6 @@ import java.util.stream.Collectors;
 import catering.businesslogic.staff.JobType;
 import catering.businesslogic.staff.Staff;
 import catering.util.LogManager;
-import catering.businesslogic.event.Role;
 
 public class EventStaffSheet {
     private static final Logger LOGGER = LogManager.getLogger(EventStaffSheet.class);
