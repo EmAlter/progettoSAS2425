@@ -12,7 +12,6 @@ public class Role {
     private String description; // Descrizione del ruolo (es. "Addetto alla griglia", "Addetto alla sala", ecc.)
     private JobType type; // CUOCO, CHEF, SERVIZIO
     private Staff assignedStaff; // Staff assegnato a questo ruolo
-    private EventStaffSheet sheet;
 
     /**
      * Crea un nuovo ruolo con ID univoco e tipo specificato.
