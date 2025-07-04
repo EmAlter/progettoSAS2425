@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import catering.businesslogic.staff.Role;
 import catering.businesslogic.staff.Staff;
 import catering.util.LogManager;
+import catering.businesslogic.event.Role;
 
 public class EventStaffSheet {
     private static final Logger LOGGER = LogManager.getLogger(EventStaffSheet.class);

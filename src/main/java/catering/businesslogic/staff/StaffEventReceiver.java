@@ -1,4 +1,5 @@
 package catering.businesslogic.staff;
+import catering.businesslogic.event.Role;
 
 /**
  * Interface for receiving staff-related event notifications.

@@ -10,7 +10,7 @@ import java.util.logging.Logger;
 import catering.businesslogic.UseCaseLogicException;
 import catering.businesslogic.menu.Menu;
 import catering.businesslogic.staff.HolidayRequest;
-import catering.businesslogic.staff.Role;
+import catering.businesslogic.event.Role;
 import catering.businesslogic.staff.Staff;
 import catering.businesslogic.staff.StaffEventReceiver;
 import catering.businesslogic.user.User;
