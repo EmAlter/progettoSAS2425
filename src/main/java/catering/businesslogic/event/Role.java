@@ -19,7 +19,7 @@ public class Role {
         this.id = UUID.randomUUID();
         this.description = description;
         this.type = type;
-        this.assignedStaff = null; // Staff assegnato a questo ruolo = null;
+        this.assignedStaff = null; // il ruolo non ha staff assegnato inizialmente
     }
 
     public UUID getId() {

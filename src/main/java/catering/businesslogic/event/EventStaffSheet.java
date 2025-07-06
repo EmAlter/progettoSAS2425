@@ -13,10 +13,10 @@ import catering.util.LogManager;
 public class EventStaffSheet {
     private static final Logger LOGGER = LogManager.getLogger(EventStaffSheet.class);
 
-    private String note;
-    private List<Role> assignments;
-    private Event parentEvent;
-
+    private String note; //note generali sull'evento
+    private List<Role> assignments; //lista di ruoli di un evento
+    private Event parentEvent; //l'evento a cui è associato il foglio riepilogativo
+    
     public EventStaffSheet(Event event) {
         if (event == null) {
             LOGGER.severe("Event cannot be null when creating EventStaffSheet");
@@ -51,6 +51,12 @@ public class EventStaffSheet {
         return note;
     }
 
+    /**
+     * Ritorna la lista di ruoli assegnati a questo evento.
+     * Se non ci sono ruoli assegnati, viene registrato un avviso.
+     * 
+     * @return Lista di ruoli assegnati all'evento.
+     */
     public List<Role> getRoles() {
         if (assignments.isEmpty()) {
             LOGGER.warning("No roles assigned in EventStaffSheet for event: " + parentEvent.getId());
@@ -60,6 +66,13 @@ public class EventStaffSheet {
         return roles;
     }
 
+    /**
+     * Assegna uno staff a un ruolo specifico.
+     * Se il ruolo è già assegnato, viene registrato un avviso e l'assegnazione non viene effettuata.
+     * 
+     * @param r il ruolo a cui assegnare lo staff
+     * @param s lo staff da assegnare al ruolo
+     */
     public void assignStaffToRole(Role r, Staff s) {
         if (r != null && s != null) {
             if (r.isAssigned()) {
@@ -74,6 +87,12 @@ public class EventStaffSheet {
         }
     }
 
+    /**
+     * Rimuove l'assegnazione dello staff da un ruolo specifico.
+     * Se il ruolo non è assegnato, viene registrato un messaggio di log informativo.
+     * 
+     * @param r il ruolo da cui rimuovere l'assegnazione dello staff
+     */
     public void removeAssignment(Role r) {
         if (r != null) {
             if (r.isAssigned()) {
@@ -89,6 +108,13 @@ public class EventStaffSheet {
         }
     }
 
+    /**
+     * Ritorna lo staff assegnato a un ruolo specifico.
+     * Se il ruolo non è assegnato, viene registrato un messaggio di log informativo.
+     * 
+     * @param r il ruolo di cui ottenere lo staff assegnato
+     * @return lo staff assegnato al ruolo, o null se non è assegnato
+     */
     public Staff getStaffForRole(Role r) {
         if (r != null) {
             if (r.isAssigned()) {
@@ -103,6 +129,11 @@ public class EventStaffSheet {
         return null;
     }
 
+    /**
+     * Ritorna la lista di ruoli già assegnati a questo evento.
+     * 
+     * @return Lista di ruoli assegnati dell'evento.
+     */
     public List<Role> getAssignedRoles() {
         List<Role> assignedRoles = assignments.stream()
                                        .filter(Role::isAssigned)
@@ -111,6 +142,11 @@ public class EventStaffSheet {
         return assignedRoles;
     }
 
+    /**
+     * Ritorna la lista di ruoli non assegnati a questo evento.
+     * 
+     * @return Lista di ruoli non ancora assegnati dell'evento.
+     */
     public List<Role> getUnassignedRoles() {
         List<Role> res = assignments.stream()
                               .filter(r -> !r.isAssigned())
@@ -119,12 +155,25 @@ public class EventStaffSheet {
         return res;
     }
 
+    /**
+     * Conta il numero di ruoli assegnati dell'evento.
+     * 
+     * @return Numero di ruoli assegnati.
+     */
     public long countAssignedRoles() {
         long count = assignments.stream().filter(Role::isAssigned).count();                               
         LOGGER.fine("Counted " + count + " assigned roles out of " + assignments.size() + " total roles");
         return count;
     }
 
+    /**
+     * Trova un ruolo specifico in base al tipo e alla descrizione.
+     * Se il ruolo non viene trovato, viene registrato un avviso.
+     * 
+     * @param type Tipo di lavoro del ruolo (CUOCO, CHEF, SERVIZIO)
+     * @param description Descrizione del ruolo
+     * @return Il ruolo trovato o null se non esiste
+     */
     public Role findRole(JobType type, String description) {
         Role target = assignments.stream()
                       .filter(r -> r.getType() == type && r.getDescription().equalsIgnoreCase(description))
@@ -139,6 +188,13 @@ public class EventStaffSheet {
         return target;
     }
 
+    /**
+     * Trova un ruolo specifico in base al suo ID.
+     * Se il ruolo non viene trovato, viene registrato un avviso.
+     * 
+     * @param id ID del ruolo da cercare
+     * @return Il ruolo trovato o null se non esiste
+     */
     public Role findRoleById(UUID id) {
         Role target = assignments.stream()
                         .filter(r -> r.getId().equals(id))
@@ -153,6 +209,13 @@ public class EventStaffSheet {
         return target;
     }
 
+    /**
+     * Ritorna una lista di ruoli non assegnati di un certo tipo.
+     * Se non ci sono ruoli di quel tipo non assegnati, viene registrato un avviso.
+     * 
+     * @param type Tipo di lavoro del ruolo (CUOCO, CHEF, SERVIZIO)
+     * @return Lista di ruoli non assegnati del tipo specificato
+     */
     public List<Role> getNotAssignedByType(JobType type) {
         List<Role> res = assignments.stream()
                 .filter(r -> r.getType() == type && !r.isAssigned())
