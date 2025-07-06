@@ -12,7 +12,7 @@ public class ServiceStaff extends Staff {
      * @param fiscalCode Il codice fiscale del personale di servizio.
      */
     public ServiceStaff(boolean permanent, String name, String address, String contact, String fiscalCode) {
-        super(JobType.SERVICE_STAFF, permanent, name, address, contact, fiscalCode);
+        super(JobType.SERVICE, permanent, name, address, contact, fiscalCode);
     }
 
 }

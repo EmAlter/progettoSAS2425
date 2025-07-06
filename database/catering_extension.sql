@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS `Staff` (
     `address` TEXT,
     `fiscal_code` TEXT, -- Codice Fiscale
     `permanent` INTEGER DEFAULT 0, -- boolean: 0=temporaneo, 1=permanente
-    `job_type` TEXT NOT NULL CHECK (job_type IN ('CUOCO', 'CHEF', 'SERVIZIO'), -- tipo contrattuale
+    `job_type` TEXT NOT NULL CHECK (job_type IN ('COOK', 'CHEF', 'SERVICE'), -- tipo contrattuale
     `remaining_days_off` INTEGER DEFAULT 30 -- giorni di ferie rimanenti
 );
 
@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS `EventRoles` (
     `id` INTEGER PRIMARY KEY AUTOINCREMENT,
     `event_id` INTEGER NOT NULL,
     `description` TEXT NOT NULL, -- es. "Addetto alla griglia", "Responsabile sala"
-    `job_type` TEXT NOT NULL CHECK (job_type IN ('CUOCO', 'CHEF', 'SERVIZIO'), -- qualifica richiesta
+    `job_type` TEXT NOT NULL CHECK (job_type IN ('COOK', 'CHEF', 'SERVICE'), -- qualifica richiesta
     `staff_id` INTEGER DEFAULT NULL, -- Staff assegnato (NULL = non assegnato)
     FOREIGN KEY (`event_id`) REFERENCES `Events` (`id`) ON DELETE CASCADE,
     FOREIGN KEY (`staff_id`) REFERENCES `Staff` (`id`) ON DELETE SET NULL
@@ -95,10 +95,10 @@ CREATE INDEX IF NOT EXISTS `idx_holiday_requests_status` ON `HolidayRequests` (`
 -- Inserimento staff di esempio
 INSERT INTO `Staff` (`name`, `contact`, `address`, `fiscal_code`, `permanent`, `job_type`, `remaining_days_off`) VALUES 
 ('Mario Rossi', '333-1234567', 'Via Roma 123, Milano', 'RSSMRA85M01F205X', 1, 'CHEF', 15),
-('Lucia Bianchi', '333-2345678', 'Via Garibaldi 45, Milano', 'BNCLCU90F45F205Y', 1, 'CUOCO', 12),
-('Giorgio Verdi', '333-3456789', 'Corso Italia 67, Milano', 'VRDGRG88H15F205Z', 0, 'CUOCO', 8),
-('Francesca Neri', '333-4567890', 'Via Montenapoleone 12, Milano', 'NRIFRN92D55F205W', 1, 'SERVIZIO', 18),
-('Alessandro Blu', '333-5678901', 'Via Brera 34, Milano', 'BLUALS89L20F205V', 0, 'SERVIZIO', 5),
+('Lucia Bianchi', '333-2345678', 'Via Garibaldi 45, Milano', 'BNCLCU90F45F205Y', 1, 'COOK', 12),
+('Giorgio Verdi', '333-3456789', 'Corso Italia 67, Milano', 'VRDGRG88H15F205Z', 0, 'COOK', 8),
+('Francesca Neri', '333-4567890', 'Via Montenapoleone 12, Milano', 'NRIFRN92D55F205W', 1, 'SERVICE', 18),
+('Alessandro Blu', '333-5678901', 'Via Brera 34, Milano', 'BLUALS89L20F205V', 0, 'SERVICE', 5),
 ('Carla Rosa', '333-6789012', 'Via Torino 78, Milano', 'RSOCRL87A60F205U', 1, 'CHEF', 20);
 
 -- Ferie già prese 

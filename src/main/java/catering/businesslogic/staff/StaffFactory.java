@@ -25,7 +25,7 @@ public class StaffFactory {
                 return new Cook(permanent, name, address, contact, fiscalCode);
             case CHEF:
                 return new Chef(permanent, name, address, contact, fiscalCode);
-            case SERVICE_STAFF:
+            case SERVICE:
                 return new ServiceStaff(permanent, name, address, contact, fiscalCode);
             default:
                 throw new IllegalArgumentException("Unsupported JobType: " + jobType);

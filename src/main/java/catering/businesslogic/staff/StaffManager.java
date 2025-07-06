@@ -3,7 +3,6 @@ package catering.businesslogic.staff;
 import java.util.Set;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.logging.Logger;
 
@@ -58,10 +57,8 @@ public class StaffManager {
         // Crea un'istanza di Staff utilizzando la fabbrica
         Staff newStaff = StaffFactory.createStaff(jobType, permanent, name, address, contact, fiscalCode);
         
-        // Salva nel database
-        newStaff.saveNewStaff();
-        LOGGER.info("Successfully hired new staff: " + name + " (ID: " + newStaff.getId() + ")");
         notifyStaffHired(newStaff);
+        LOGGER.info("Successfully hired new staff: " + name);
         return newStaff;
     }
 
@@ -99,11 +96,10 @@ public class StaffManager {
         
         // Creazione della nota di valutazione
         EvaluationNote evaluationNote = new EvaluationNote(note.trim(), event.getId());
-        
-        // Salva la nota nel database
-        evaluationNote.saveNewEvaluationNote(staff.getId());
-        // Aggiungi la nota anche all'oggetto staff in memoria
+
+        notifyEvaluationNoteAdded(staff, evaluationNote);
         staff.AddNote(evaluationNote);
+        
         LOGGER.info("Added evaluation note for staff " + staff.getName() + " for event " + event.getName());
     }
 
@@ -193,10 +189,8 @@ public class StaffManager {
             throw new IllegalArgumentException("At least one of contact or address must be provided");
         }
 
-        // Salva le modifiche nel database
-        existingStaff.updateStaff();
-        LOGGER.info("Modified staff data for: " + existingStaff.getName());
-        notifyStaffModified(existingStaff);
+        notifyStaffModified(staff);
+        LOGGER.info("Modified staff data for: " + staff.getName());
     }
 
     /**
@@ -268,39 +262,31 @@ public class StaffManager {
             throw new IllegalArgumentException("Holiday request cannot be null");
         }
         
-        int numberOfDaysRequested = request.getNumberOfDays();
-        if (numberOfDaysRequested <= 0) {
-            throw new IllegalArgumentException("Number of requested days must be greater than zero");
+        validateHolidayRequest(request);
+
+        try {
+            // 1. Carica staff aggiornato dal database
+            Staff staff = Staff.loadById(request.getRequester().getId());
+            if (staff == null) {
+                throw new IllegalArgumentException("Staff not found: " + request.getRequester().getId());
+            }
+            
+            // 2. Aggiorna giorni e ferie
+            staff.reduceHolidays(request.getNumberOfDays());
+            staff.addHolidays(request.getRequestedDays());
+            
+            // 3. Notifica le modifiche
+            notifyStaffModified(staff);
+            notifyHolidayRequestDeleted(request);
+            
+            LOGGER.info("Accepted holiday request for " + staff.getName() + " (" + request.getNumberOfDays() + " days)");
+            
+        } catch (Exception e) {
+            LOGGER.severe("Failed to accept holiday request: " + e.getMessage());
+            throw new IllegalArgumentException("Failed to process holiday request: " + e.getMessage());
         }
         
-        Set<Date> requestedDays = request.getRequestedDays();
-        if (requestedDays == null || requestedDays.isEmpty()) {
-            throw new IllegalArgumentException("Requested days cannot be null or empty");
-        }
-        
-        Staff requester = request.getRequester();
-        if (requester == null) {
-            throw new IllegalArgumentException("Requester cannot be null");
-        }
-
-        // Carica i dati aggiornati dello staff dal database
-        Staff currentRequester = Staff.loadById(requester.getId());
-        if (currentRequester == null) {
-            throw new IllegalArgumentException("Requester not found in the system");
-        }
-
-        // Verifica che abbia abbastanza giorni disponibili
-        if (currentRequester.getRemainingDaysOff() < numberOfDaysRequested) {
-            throw new IllegalArgumentException("Insufficient holiday days available");
-        }
-
-        currentRequester.reduceHolidays(numberOfDaysRequested);
-        currentRequester.addHolidays(requestedDays);
-
-        notifyStaffModified(currentRequester);
-        notifyHolidayRequestDeleted(request);
-        
-        LOGGER.info("Accepted holiday request for " + currentRequester.getName() + " (" + numberOfDaysRequested + " days)");
+        LOGGER.info("Accepted holiday request for " + request.getRequester().getName());
     }
 
     /**
@@ -322,6 +308,30 @@ public class StaffManager {
         
         LOGGER.info("Rejected holiday request for " + request.getRequester().getName());
     }
+
+    private void validateHolidayRequest(HolidayRequest request) throws IllegalArgumentException {
+    if (request.getNumberOfDays() <= 0) {
+        throw new IllegalArgumentException("Number of requested days must be greater than zero");
+    }
+    
+    if (request.getRequestedDays() == null || request.getRequestedDays().isEmpty()) {
+        throw new IllegalArgumentException("Requested days cannot be null or empty");
+    }
+    
+    if (request.getRequester() == null) {
+        throw new IllegalArgumentException("Requester cannot be null");
+    }
+
+    // Verifica disponibilità giorni dal database
+    Staff currentRequester = Staff.loadById(request.getRequester().getId());
+    if (currentRequester == null) {
+        throw new IllegalArgumentException("Requester not found in the system");
+    }
+
+    if (currentRequester.getRemainingDaysOff() < request.getNumberOfDays()) {
+        throw new IllegalArgumentException("Insufficient holiday days available");
+    }
+}
 
     // ===== DATABASE OPERATIONS =====
 
@@ -393,4 +403,10 @@ public class StaffManager {
             receiver.updateHolidayRequestDeleted(request);
         }
     }
+
+    private void notifyEvaluationNoteAdded(Staff staff, EvaluationNote note) {
+    for (StaffEventReceiver receiver : eventReceivers) {
+        receiver.updateEvaluationNoteAdded(staff, note);
+    }
+}
 }
