@@ -1,18 +1,22 @@
 package catering.businesslogic.event;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import catering.businesslogic.staff.JobType;
 import catering.businesslogic.staff.Staff;
+import catering.persistence.PersistenceManager;
+import catering.persistence.ResultHandler;
 import catering.util.LogManager;
 
 public class EventStaffSheet {
     private static final Logger LOGGER = LogManager.getLogger(EventStaffSheet.class);
 
+    private int id; // ID della scheda riepilogativa -> è lo stesso ID dell'evento
     private String note; //note generali sull'evento
     private List<Role> assignments; //lista di ruoli di un evento
     private Event parentEvent; //l'evento a cui è associato il foglio riepilogativo
@@ -25,14 +29,14 @@ public class EventStaffSheet {
         this.note = "";
         this.assignments = new ArrayList<>();
         this.parentEvent = event;
+        this.id = event.getId();
         LOGGER.fine("EventStaffSheet created.");
         LOGGER.info("Current state: " + this.toString());
     }
 
-    public void addRole(String description, JobType type) {
-        Role newRole = new Role(description, type);
-        assignments.add(newRole);
-        LOGGER.info("Added new role: " + description + " of type: " + type + " to EventStaffSheet.");
+    public void addRole(Role role) {
+        assignments.add(role);
+        LOGGER.info("Added new role: " + role.getDescription() + " of type: " + role.getType() + " to EventStaffSheet.");
         LOGGER.info("Current state: " + this.toString());
     }
 
@@ -195,9 +199,9 @@ public class EventStaffSheet {
      * @param id ID del ruolo da cercare
      * @return Il ruolo trovato o null se non esiste
      */
-    public Role findRoleById(UUID id) {
+    public Role findRoleById(int id) {
         Role target = assignments.stream()
-                        .filter(r -> r.getId().equals(id))
+                        .filter(r -> r.getId() == id)
                         .findFirst()
                         .orElse(null);
         if (target == null) {
@@ -234,5 +238,220 @@ public class EventStaffSheet {
         sb.append(", note: ").append(note.length() > 0 ? "present" : "empty");
         sb.append("]");
         return sb.toString();
-    }    
+    }
+
+    // Database operations
+
+    /**
+     * Carica una EventStaffSheet per un evento specifico
+     */
+    public static EventStaffSheet loadByEventId(int eventId) {
+        String query = "SELECT * FROM EventStaffSheets WHERE id = ?";
+        EventStaffSheet[] sheetHolder = new EventStaffSheet[1];
+
+        PersistenceManager.executeQuery(query, new ResultHandler() {
+            @Override
+            public void handle(ResultSet rs) throws SQLException {
+                Event event = Event.loadById(eventId);
+                if (event != null) {
+                    EventStaffSheet sheet = new EventStaffSheet(event);
+                    sheet.id = rs.getInt("id");  // Imposta l'ID
+                    sheet.note = rs.getString("note");
+                    sheetHolder[0] = sheet;
+                }
+            }
+        }, eventId);
+
+        EventStaffSheet sheet = sheetHolder[0];
+        if (sheet != null) {
+            sheet.assignments = loadRolesForEvent(eventId);
+        }
+
+        return sheet;
+    }
+
+    /**
+     * Carica tutte le EventStaffSheet
+     */
+    public static List<EventStaffSheet> loadAllEventStaffSheets() {
+        String query = "SELECT * FROM EventStaffSheets ORDER BY id";
+        List<EventStaffSheet> sheets = new ArrayList<>();
+        List<Integer> eventIds = new ArrayList<>();
+
+        PersistenceManager.executeQuery(query, new ResultHandler() {
+            @Override
+            public void handle(ResultSet rs) throws SQLException {
+                int eventId = rs.getInt("id");
+                Event event = Event.loadById(eventId);
+                if (event != null) {
+                    EventStaffSheet sheet = new EventStaffSheet(event);
+                    sheet.id = eventId;  // Imposta l'ID
+                    sheet.note = rs.getString("note");
+                    sheets.add(sheet);
+                    eventIds.add(eventId);
+                }
+            }
+        });
+
+        // Carica i ruoli per ogni sheet
+        for (int i = 0; i < sheets.size(); i++) {
+            sheets.get(i).assignments = loadRolesForEvent(eventIds.get(i));
+        }
+
+        return sheets;
+    }
+
+    /**
+     * Carica i ruoli per un evento specifico
+     */
+    private static List<Role> loadRolesForEvent(int eventId) {
+        String query = "SELECT * FROM EventRoles WHERE event_id = ? ORDER BY id";
+        List<Role> roles = new ArrayList<>();
+
+        PersistenceManager.executeQuery(query, new ResultHandler() {
+            @Override
+            public void handle(ResultSet rs) throws SQLException {
+                String description = rs.getString("description");
+                String jobTypeStr = rs.getString("job_type");
+                JobType jobType = JobType.valueOf(jobTypeStr);
+                
+                Role role = new Role(description, jobType);
+                role.setId(rs.getInt("id"));
+                
+                int staffId = rs.getInt("staff_id");
+                if (staffId > 0 && !rs.wasNull()) {
+                    // Carica lo staff assegnato (dovrai implementare Staff.loadById)
+                    Staff staff = Staff.loadById(staffId);
+                    if (staff != null) {
+                        role.setStaff(staff);
+                    }
+                }
+                
+                roles.add(role);
+            }
+        }, eventId);
+
+        return roles;
+    }
+
+    /**
+     * Salva una nuova EventStaffSheet nel database
+     */
+    public void saveNewEventStaffSheet() {
+        if (parentEvent == null) {
+            LOGGER.severe("Cannot save EventStaffSheet without parent event");
+            return;
+        }
+
+        this.id = parentEvent.getId();
+
+        String query = "INSERT INTO EventStaffSheets (id, note) VALUES (?, ?)";
+        PersistenceManager.executeUpdate(query, this.id, note);
+        
+        LOGGER.info("Saved new EventStaffSheet for event ID: " + id);
+    }
+
+    /**
+     * Aggiorna una EventStaffSheet esistente
+     */
+    public void updateEventStaffSheet() {
+        String query = "UPDATE EventStaffSheets SET note = ? WHERE id = ?";
+        PersistenceManager.executeUpdate(query, note, id);
+        
+        LOGGER.info("Updated EventStaffSheet for event ID: " + id);
+    }
+
+    /**
+     * Elimina una EventStaffSheet dal database
+     */
+    public boolean deleteEventStaffSheet() {
+        // Prima elimina i ruoli
+        String deleteRolesQuery = "DELETE FROM EventRoles WHERE event_id = ?";
+        PersistenceManager.executeUpdate(deleteRolesQuery, id);
+
+        // Poi elimina la sheet
+        String deleteSheetQuery = "DELETE FROM EventStaffSheets WHERE id = ?";
+        boolean success = PersistenceManager.executeUpdate(deleteSheetQuery, id) > 0;
+
+        if (success) {
+            LOGGER.info("Deleted EventStaffSheet for event ID: " + id);
+        }
+
+        return success;
+    }
+
+    /**
+     * Salva un nuovo ruolo nel database
+     */
+    public void saveNewRole(Role role) {
+        if (parentEvent == null || role == null) {
+            LOGGER.warning("Cannot save role: missing parent event or role is null");
+            return;
+        }
+
+        String query = "INSERT INTO EventRoles (event_id, description, job_type, staff_id) VALUES (?, ?, ?, ?)";
+        
+        Integer staffId = null;
+        
+        if (role.isAssigned()) {
+            staffId = role.getAssignedStaff().getId();
+        }
+
+        PersistenceManager.executeUpdate(query, 
+            this.id,
+            role.getDescription(),
+            role.getType().toString(),
+            staffId
+        );
+
+        // Assegna l'ID generato dal database
+        role.setId(PersistenceManager.getLastId());
+        
+        LOGGER.info("Saved new role: " + role.getDescription() + " for event ID: " + parentEvent.getId());
+    }
+
+    /**
+     * Aggiorna l'assegnazione di un ruolo nel database (assegna staff)
+     */
+    public void updateRoleAssignment(Role role) {
+        if (parentEvent == null || role == null || !role.isAssigned()) {
+            LOGGER.warning("Cannot update role assignment: missing data or role not assigned");
+            return;
+        }
+
+        String query = "UPDATE EventRoles SET staff_id = ? WHERE id = ?";
+        
+        int rowsAffected = PersistenceManager.executeUpdate(query, 
+            role.getAssignedStaff().getId(),
+            role.getId()
+        );
+        
+        if (rowsAffected > 0) {
+            LOGGER.info("Updated role assignment in database for role ID: " + role.getId());
+        } else {
+            LOGGER.warning("No rows affected when updating role assignment for role ID: " + role.getId());
+        }
+    }
+
+    /**
+     * Aggiorna l'assegnazione di un ruolo nel database (rimuove lo staff assegnato)
+     */
+    public void updateRoleUnassignment(Role role) {
+        if (parentEvent == null || role == null) {
+            LOGGER.warning("Cannot update role unassignment: missing parent event or role is null");
+            return;
+        }
+
+        // Trova il ruolo nel database e rimuovi l'assegnazione
+        String query = "UPDATE EventRoles SET staff_id = NULL WHERE id = ?";
+        
+        int rowsAffected = PersistenceManager.executeUpdate(query, role.getId());
+        
+        if (rowsAffected > 0) {
+            LOGGER.info("Updated role unassignment in database for role ID: " + role.getId());
+        } else {
+            LOGGER.warning("No rows affected when updating role unassignment for role ID: " + role.getId());
+        }
+    }
+    
 }

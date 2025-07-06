@@ -9,9 +9,8 @@ import java.util.logging.Logger;
 
 import catering.businesslogic.UseCaseLogicException;
 import catering.businesslogic.menu.Menu;
-import catering.businesslogic.staff.HolidayRequest;
+import catering.businesslogic.staff.JobType;
 import catering.businesslogic.staff.Staff;
-import catering.businesslogic.staff.StaffEventReceiver;
 import catering.businesslogic.user.User;
 import catering.util.LogManager;
 
@@ -21,13 +20,14 @@ import catering.util.LogManager;
  * It manages event creation, modification, and deletion, as well as service
  * management and menu assignments for services.
  */
-public class EventManager implements StaffEventReceiver{
+public class EventManager {
 
     private static final Logger LOGGER = LogManager.getLogger(EventManager.class);
 
     private ArrayList<EventReceiver> eventReceivers;
     private EventStaffSheet currentEventStaffSheet;
     private Service currentService;
+    private Event selectedEvent;
 
     /**
      * Constructor initializes the event receivers list
@@ -126,7 +126,23 @@ public class EventManager implements StaffEventReceiver{
      *         selected
      */
     public EventStaffSheet getCurrentEventStaffSheet() {
-        return null; // TODO: Implement logic to return the staff sheet for the selected event
+            if (selectedEvent == null) {
+            return null;
+        }
+        
+        if (currentEventStaffSheet == null) {
+            // Carica o crea la EventStaffSheet per l'evento corrente
+            currentEventStaffSheet = EventStaffSheet.loadByEventId(selectedEvent.getId());
+            
+            if (currentEventStaffSheet == null) {
+                // Se non esiste, creala
+                currentEventStaffSheet = new EventStaffSheet(selectedEvent);
+                currentEventStaffSheet.saveNewEventStaffSheet();
+                notifyEventStaffSheetCreated(currentEventStaffSheet);
+            }
+        }
+        
+        return currentEventStaffSheet;
     }
 
     /**
@@ -135,10 +151,7 @@ public class EventManager implements StaffEventReceiver{
      * @return List of staff sheets for all events
      */
     public List<EventStaffSheet> getAllEventSheets() {
-        List<EventStaffSheet> sheets = new ArrayList<>();
-        // TODO: Implement logic to retrieve all event staff sheets
-        
-        return sheets;
+        return EventStaffSheet.loadAllEventStaffSheets();
     }
 
     /**
@@ -152,9 +165,42 @@ public class EventManager implements StaffEventReceiver{
         if (selectedEvent == null) {
             String msg = "Cannot add notes: no event selected";
             LOGGER.warning(msg);
+            return;
         }
-        // TODO: Implement logic to add note to the staff sheet of the selected event
-        // TODO: Notify all receivers
+        EventStaffSheet sheet = getCurrentEventStaffSheet();
+        if (sheet != null) {
+            sheet.setNote(note);
+            sheet.updateEventStaffSheet();
+        }
+        
+        notifyEventStaffSheetModified(sheet);
+    }
+
+    /**
+     * Creates a new Role for the current EventStaffSheet.
+     * If no event is selected, logs a warning and does nothing.
+     */
+    public Role createRole(String description, JobType type) throws UseCaseLogicException{
+        if (selectedEvent == null) {
+            String msg = "Cannot create role: no event selected";
+            LOGGER.warning(msg);
+            throw new UseCaseLogicException(msg);
+        }
+
+        EventStaffSheet sheet = getCurrentEventStaffSheet();
+        if (sheet == null) {
+            String msg = "Cannot create role: no staff sheet available for the selected event";
+            LOGGER.warning(msg);
+            throw new UseCaseLogicException(msg);
+        }
+        
+        Role role = new Role(description, type);
+
+        sheet.addRole(role);
+        
+        notifyRoleCreated(sheet, role);
+
+        return role;
     }
 
     /**
@@ -166,21 +212,54 @@ public class EventManager implements StaffEventReceiver{
             LOGGER.warning(msg);
         }
 
-        // TODO: Implement logic to assign the role to the staff member
-        // TODO: Notify all receivers
+        EventStaffSheet sheet = getCurrentEventStaffSheet();
+        if (sheet == null) {
+            String msg = "Cannot create role: no staff sheet available for the selected event";
+            LOGGER.warning(msg);
+            throw new UseCaseLogicException(msg);
+        }
+
+        sheet.assignStaffToRole(r, s);
+        
+        notifyRoleAssigned(sheet, r, s);
     }
     
     /**
      * Removes an assignment of a staff member from a role in the specified
      * EventStaffSheet.
      */
-    public void removeAssignment(Role r, Staff s) {
+    public void removeAssignment(Role r) throws UseCaseLogicException {
         if (selectedEvent == null) {
             String msg = "Cannot remove assignment: no event selected";
             LOGGER.warning(msg);
         }
-        // TODO: Implement logic to remove the assignment of the staff member from the role
-        // TODO: Notify all receivers
+        
+        if (r == null) {
+            String msg = "Cannot unassign role: role is null";
+            LOGGER.warning(msg);
+            throw new UseCaseLogicException(msg);
+        }
+
+        EventStaffSheet sheet = getCurrentEventStaffSheet();
+        if (sheet == null) {
+            String msg = "Cannot unassign role: no staff sheet available";
+            LOGGER.warning(msg);
+            throw new UseCaseLogicException(msg);
+        }
+
+        if (!r.isAssigned()) {
+            String msg = "Role '" + r.getDescription() + "' is not assigned to anyone";
+            LOGGER.warning(msg);
+            throw new UseCaseLogicException(msg);
+        }
+
+        Staff previousStaff = r.getAssignedStaff();
+        LOGGER.info("Unassigning staff '" + previousStaff.getName() + "' from role '" + r.getDescription() + "'");
+
+        // Rimuove l'assegnazione
+        sheet.removeAssignment(r);
+
+        notifyRoleUnassigned(sheet, r, previousStaff);
     }
 
     /**
@@ -209,10 +288,12 @@ public class EventManager implements StaffEventReceiver{
             this.selectedEvent = event;
             this.currentService = null;
 
-            // TODO: Initialize the staff sheet for this event
+            EventStaffSheet staffSheet = new EventStaffSheet(event);
+            this.currentEventStaffSheet = staffSheet;
 
             // Notify all receivers
             notifyEventCreated(event);
+            notifyEventStaffSheetCreated(staffSheet);
 
             return event;
         } catch (Exception e) {
@@ -225,6 +306,7 @@ public class EventManager implements StaffEventReceiver{
         LOGGER.info("Selecting event '" + event.getName() + "' (ID: " + event.getId() + ")");
         this.selectedEvent = event;
         this.currentService = null;
+        this.currentEventStaffSheet = null;
     }
 
     public Service createService(String name, Date date, Time timeStart, Time timeEnd, String location)
@@ -528,34 +610,45 @@ public class EventManager implements StaffEventReceiver{
         }
     }
 
-    @Override
-    public void updateRoleCreated(Role r) {        
-        if (selectedEvent == null) {
-            String msg = "Cannot add role: no event selected";
-            LOGGER.warning(msg);
+    private void notifyEventStaffSheetCreated(EventStaffSheet sheet) {
+        for (EventReceiver receiver : eventReceivers) {
+            receiver.updateEventStaffSheetCreated(sheet);
+        }   
+    }
+
+    private void notifyEventStaffSheetModified(EventStaffSheet sheet) {
+        for (EventReceiver receiver : eventReceivers) {
+            receiver.updateEventStaffSheetModified(sheet);
         }
-        
-        // TODO: Notify all receivers
     }
 
-    @Override
-    public void updateStaffHired(Staff s) {
-        // EventManager non gestisce questo evento
+    // private void notifyEventStaffSheetDeleted(EventStaffSheet sheet) {
+    //     for (EventReceiver receiver : eventReceivers) {
+    //         receiver.updateEventStaffSheetDeleted(sheet);
+    //     }
+    // }
+
+    private void notifyRoleCreated(EventStaffSheet sheet, Role role) {
+        for (EventReceiver receiver : eventReceivers) {
+            receiver.updateRoleCreated(sheet, role);
+        }   
     }
 
-    @Override
-    public void updateStaffModified(Staff s) {
-        // EventManager non gestisce questo evento
+    private void notifyRoleAssigned(EventStaffSheet sheet, Role role, Staff staff) {
+        for (EventReceiver receiver : eventReceivers) {
+            receiver.updateRoleAssigned(sheet, role, staff);
+        }
     }
 
-    @Override
-    public void updateHolidayRequestDeleted(HolidayRequest hr) {
-        // EventManager non gestisce questo evento
+    private void notifyRoleUnassigned(EventStaffSheet sheet, Role role, Staff previousStaff) {
+        for (EventReceiver receiver : eventReceivers) {
+            receiver.updateRoleUnassigned(sheet, role, previousStaff);
+        }
     }
 
-    /** TODO: 
-     * Aggiungere metodi notify per tutte le modifiche a EventStaffSheet.
-     * Questi metodi possono essere implementati in modo simile a quelli esistenti,
-     * notificando i cambiamenti agli EventReceiver registrati.
-     */
+    // private void notifyRoleRemoved(EventStaffSheet sheet, Role role) {
+    //     for (EventReceiver receiver : eventReceivers) {
+    //         receiver.updateRoleRemoved(sheet, role);
+    //     }
+    // }
 }

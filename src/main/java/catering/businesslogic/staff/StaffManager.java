@@ -12,14 +12,25 @@ import catering.businesslogic.shift.*;
 import catering.businesslogic.user.User;
 
 public class StaffManager {
-    private Set<Staff> staffList; //Elenco del personale
+    private Set<Staff> staffList; // Elenco del personale
     private Set<HolidayRequest> holidayRequests; // Elenco delle richieste di ferie
 
     public StaffManager() {
         this.staffList = new HashSet<>(); // Inizializza l'elenco del personale come un Set vuoto e mutabile
     }
 
-    /** METODI DEL MODELLO */
+    /* METODI DEL MODELLO */
+
+    /**
+     * Aggiunge un nuovo membro dello staff al sistema.
+     * @param jobType
+     * @param permanent
+     * @param name
+     * @param address
+     * @param contact
+     * @param fiscalCode
+     * @throws UseCaseLogicException
+     */
     public void hireStaff(JobType jobType, boolean permanent, String name, String address, String contact, String fiscalCode) throws UseCaseLogicException {
         User user = CatERing.getInstance().getUserManager().getCurrentUser();
 
@@ -29,7 +40,7 @@ public class StaffManager {
         // Crea un'istanza di Staff utilizzando la fabbrica
         Staff newStaff = StaffFactory.createStaff(jobType, permanent, name, address, contact, fiscalCode);
         staffList.add(newStaff);
-        //Bisogna salvare il nuovo personale nel database e notificare gli osservatori
+        // TODO: Bisogna salvare il nuovo personale nel database e notificare gli osservatori
     }
 
     /**
@@ -65,7 +76,7 @@ public class StaffManager {
         // Delega allo staff l'aggiunta della nota alla sua collezione
         staff.AddNote(evaluationNote);
         
-        // Salva la nota nel database (forse?) e notificare gli osservatori
+        // TODO: Salva la nota nel database (forse?) e notificare gli osservatori
     }
 
     /**
@@ -80,21 +91,20 @@ public class StaffManager {
             throw new UseCaseLogicException();
         }
 
-        EventManager eventManager = EventManager.getInstance().assignRole(role, staff);
+        CatERing.getInstance().getEventManager().assignRole(role, staff);
     }
 
     /**
      * Rimuove un membro dello staff da un ruolo specifico. (Delega la responsabilità all'EventManager)
      * @param role
-     * @param staff
      */
-    public void removeStaffFromRole(Role role, Staff staff) throws UseCaseLogicException {
+    public void removeStaffFromRole(Role role) throws UseCaseLogicException {
         User user = CatERing.getInstance().getUserManager().getCurrentUser();
         if (!user.isOrganizer() || !user.isOwner()) {
             throw new UseCaseLogicException();
         }
 
-        EventManager eventManager = EventManager.getInstance().removeAssignment(role, staff);
+        CatERing.getInstance().getEventManager().removeAssignment(role);
     }
 
     public List<EventStaffSheet> consultHistoricalEvents() throws UseCaseLogicException {
@@ -103,7 +113,7 @@ public class StaffManager {
             throw new UseCaseLogicException();
         }
 
-        return EventManager.getInstance().getAllEventSheets();
+        return CatERing.getInstance().getEventManager().getAllEventSheets();
     }
     /**
      * Modifica i dati di un membro dello staff esistente.
@@ -170,7 +180,7 @@ public class StaffManager {
         if (user.isOwner()) {
             throw new UseCaseLogicException();
         }
-        return ShiftManager.getInstance().getShiftTable();
+        return CatERing.getInstance().getShiftManager().getShiftTable();
     }
 
     public void acceptHolidayRequest(HolidayRequest request) throws UseCaseLogicException, IllegalArgumentException {

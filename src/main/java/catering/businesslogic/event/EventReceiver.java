@@ -1,6 +1,7 @@
 package catering.businesslogic.event;
 
 import catering.businesslogic.menu.Menu;
+import catering.businesslogic.staff.Staff;
 
 /**
  * Interface for receiving event-related notifications.
@@ -24,9 +25,17 @@ public interface EventReceiver {
 
     void updateMenuRemoved(Service service);
 
-    /** TODO: 
-     * Aggiungere metodi update per tutte le modifiche a EventStaffSheet.
-     * Questi metodi possono essere implementati in modo simile a quelli esistenti,
-     * notificando i cambiamenti agli EventReceiver registrati.
-     */
+    void updateEventStaffSheetCreated(EventStaffSheet sheet);
+
+    void updateEventStaffSheetModified(EventStaffSheet sheet);
+
+    void updateEventStaffSheetDeleted(EventStaffSheet sheet);
+
+    void updateRoleCreated(EventStaffSheet sheet, Role role);
+    
+    void updateRoleAssigned(EventStaffSheet sheet, Role role, Staff staff);
+
+    void updateRoleUnassigned(EventStaffSheet sheet, Role role, Staff previousStaff);
+
+    void updateRoleRemoved(EventStaffSheet sheet, Role role);
 }

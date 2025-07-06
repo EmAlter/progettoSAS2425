@@ -44,7 +44,6 @@ CREATE TABLE IF NOT EXISTS `EventRoles` (
     `description` TEXT NOT NULL, -- es. "Addetto alla griglia", "Responsabile sala"
     `job_type` TEXT NOT NULL CHECK (job_type IN ('CUOCO', 'CHEF', 'SERVIZIO'), -- qualifica richiesta
     `staff_id` INTEGER DEFAULT NULL, -- Staff assegnato (NULL = non assegnato)
-    `assigned_date` DATE DEFAULT NULL, -- Data di assegnazione
     FOREIGN KEY (`event_id`) REFERENCES `Events` (`id`) ON DELETE CASCADE,
     FOREIGN KEY (`staff_id`) REFERENCES `Staff` (`id`) ON DELETE SET NULL
 );

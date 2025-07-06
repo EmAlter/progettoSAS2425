@@ -5,7 +5,9 @@ import catering.businesslogic.kitchen.KitchenTaskManager;
 import catering.businesslogic.menu.MenuManager;
 import catering.businesslogic.recipe.RecipeManager;
 import catering.businesslogic.shift.ShiftManager;
+import catering.businesslogic.staff.StaffManager;
 import catering.businesslogic.user.UserManager;
+import catering.persistence.EventPersistence;
 import catering.persistence.KitchenTaskPersistence;
 import catering.persistence.MenuPersistence;
 
@@ -25,7 +27,9 @@ public class CatERing {
     private EventManager eventMgr;
     private KitchenTaskManager kitchenTaskMgr;
     private ShiftManager shiftMgr;
+    private StaffManager staffMgr;
 
+    private EventPersistence eventPersistence;
     private MenuPersistence menuPersistence;
     private KitchenTaskPersistence kitchenTaskPersistence;
 
@@ -35,11 +39,14 @@ public class CatERing {
         userMgr = new UserManager();
         eventMgr = new EventManager();
         kitchenTaskMgr = new KitchenTaskManager();
-        shiftMgr = new ShiftManager(); // Add this line to initialize ShiftManager
+        shiftMgr = new ShiftManager();
+        staffMgr = new StaffManager();
 
+        eventPersistence = new EventPersistence();
         menuPersistence = new MenuPersistence();
         kitchenTaskPersistence = new KitchenTaskPersistence();
 
+        eventMgr.addEventReceiver(eventPersistence);
         menuMgr.addEventReceiver(menuPersistence);
         kitchenTaskMgr.addEventReceiver(kitchenTaskPersistence);
     }
@@ -70,6 +77,14 @@ public class CatERing {
 
     public void setShiftManager(ShiftManager shiftMgr) {
         this.shiftMgr = shiftMgr;
+    }
+
+    public StaffManager getStaffManager() {
+        return staffMgr;
+    }
+
+    public void setStaffManager(StaffManager staffMgr) {
+        this.staffMgr = staffMgr;
     }
 
     public MenuManager getMenuManager() {
