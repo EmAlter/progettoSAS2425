@@ -3,11 +3,15 @@ package catering.businesslogic.event;
 import java.sql.Date;
 import java.sql.Time;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import catering.businesslogic.UseCaseLogicException;
 import catering.businesslogic.menu.Menu;
+import catering.businesslogic.staff.HolidayRequest;
+import catering.businesslogic.staff.Staff;
+import catering.businesslogic.staff.StaffEventReceiver;
 import catering.businesslogic.user.User;
 import catering.util.LogManager;
 
@@ -17,12 +21,12 @@ import catering.util.LogManager;
  * It manages event creation, modification, and deletion, as well as service
  * management and menu assignments for services.
  */
-public class EventManager {
+public class EventManager implements StaffEventReceiver{
 
     private static final Logger LOGGER = LogManager.getLogger(EventManager.class);
 
     private ArrayList<EventReceiver> eventReceivers;
-    private Event selectedEvent;
+    private EventStaffSheet currentEventStaffSheet;
     private Service currentService;
 
     /**
@@ -112,6 +116,71 @@ public class EventManager {
      */
     public void setSelectedEvent(Event event) {
         this.selectedEvent = event;
+    }
+
+    /**
+     * Obtains the staff sheet for the currently selected event.
+     * If no event is selected, returns null.
+     * 
+     * @return The staff sheet for the current event, or null if no event is
+     *         selected
+     */
+    public EventStaffSheet getCurrentEventStaffSheet() {
+        
+        
+    }
+
+    /**
+     * Obtains the staff sheets for all events in the system.
+     * 
+     * @return List of staff sheets for all events
+     */
+    public List<EventStaffSheet> getAllEventSheets() {
+        List<EventStaffSheet> sheets = new ArrayList<>();
+        
+        
+        return sheets;
+    }
+
+    /**
+     * Adds a note to the staff sheet of the currently selected event.
+     * If no event is selected, does nothing.
+     * 
+     * @param note Note to add
+     * @param sh   The staff sheet to add the note to
+     */
+    public void addNotes(String note) {
+        if (selectedEvent == null) {
+            String msg = "Cannot add notes: no event selected";
+            LOGGER.warning(msg);
+        }
+        // TODO: Notify all receivers
+    }
+
+    /**
+     * Assigns a role to a staff member in the specified EventStaffSheet.
+     */
+    public void assignRole(Role r, Staff s) throws UseCaseLogicException {
+        if (selectedEvent == null) {
+            String msg = "Cannot assign role: no event selected";
+            LOGGER.warning(msg);
+        }
+
+    
+        // TODO: Notify all receivers
+    }
+    
+    /**
+     * Removes an assignment of a staff member from a role in the specified
+     * EventStaffSheet.
+     */
+    public void removeAssignment(Role r, Staff s) {
+        if (selectedEvent == null) {
+            String msg = "Cannot remove assignment: no event selected";
+            LOGGER.warning(msg);
+        }
+        
+        // TODO: Notify all receivers
     }
 
     /**
@@ -456,4 +525,35 @@ public class EventManager {
             receiver.updateMenuRemoved(service);
         }
     }
+
+    @Override
+    public void updateRoleCreated(Role r) {        
+        if (selectedEvent == null) {
+            String msg = "Cannot add role: no event selected";
+            LOGGER.warning(msg);
+        }
+        
+        // TODO: Notify all receivers
+    }
+
+    @Override
+    public void updateStaffHired(Staff s) {
+        // EventManager non gestisce questo evento
+    }
+
+    @Override
+    public void updateStaffModified(Staff s) {
+        // EventManager non gestisce questo evento
+    }
+
+    @Override
+    public void updateHolidayRequestDeleted(HolidayRequest hr) {
+        // EventManager non gestisce questo evento
+    }
+
+    /** TODO: 
+     * Aggiungere metodi notify per tutte le modifiche a EventStaffSheet.
+     * Questi metodi possono essere implementati in modo simile a quelli esistenti,
+     * notificando i cambiamenti agli EventReceiver registrati.
+     */
 }
