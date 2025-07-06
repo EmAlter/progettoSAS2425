@@ -18,7 +18,18 @@ CREATE TABLE IF NOT EXISTS `Staff` (
     `fiscal_code` TEXT, -- Codice Fiscale
     `permanent` INTEGER DEFAULT 0, -- boolean: 0=temporaneo, 1=permanente
     `job_type` TEXT NOT NULL CHECK (job_type IN ('CUOCO', 'CHEF', 'SERVIZIO'), -- tipo contrattuale
-    `remaining_days_off` INTEGER DEFAULT 0 -- giorni di ferie rimanenti
+    `remaining_days_off` INTEGER DEFAULT 30 -- giorni di ferie rimanenti
+);
+
+-- Tabella per le note di valutazione del personale
+CREATE TABLE IF NOT EXISTS `EvaluationNotes` (
+    `id` INTEGER PRIMARY KEY AUTOINCREMENT,
+    `staff_id` INTEGER NOT NULL,
+    `event_id` INTEGER NOT NULL,
+    `note` TEXT NOT NULL,
+    `created_date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (`staff_id`) REFERENCES `Staff` (`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`event_id`) REFERENCES `Events` (`id`) ON DELETE CASCADE
 );
 
 -- Tabella per le singole date di ferie già prese dal personale (Set<Date> holidays)
@@ -71,6 +82,8 @@ CREATE TABLE IF NOT EXISTS `HolidayRequestDays` (
 
 CREATE INDEX IF NOT EXISTS `idx_staff_job_type` ON `Staff` (`job_type`);
 CREATE INDEX IF NOT EXISTS `idx_staff_permanent` ON `Staff` (`permanent`);
+CREATE INDEX IF NOT EXISTS `idx_evaluation_notes_staff` ON `EvaluationNotes` (`staff_id`);
+CREATE INDEX IF NOT EXISTS `idx_evaluation_notes_event` ON `EvaluationNotes` (`event_id`);
 CREATE INDEX IF NOT EXISTS `idx_event_roles_event` ON `EventRoles` (`event_id`);
 CREATE INDEX IF NOT EXISTS `idx_event_roles_type` ON `EventRoles` (`job_type`);
 CREATE INDEX IF NOT EXISTS `idx_event_roles_staff` ON `EventRoles` (`staff_id`);

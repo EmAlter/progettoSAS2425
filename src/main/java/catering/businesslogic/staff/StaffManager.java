@@ -1,46 +1,68 @@
 package catering.businesslogic.staff;
 
 import java.util.Set;
-import java.util.HashSet;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.logging.Logger;
 
 import catering.businesslogic.CatERing;
 import catering.businesslogic.UseCaseLogicException;
 import catering.businesslogic.event.*;
 import catering.businesslogic.shift.*;
 import catering.businesslogic.user.User;
+import catering.util.LogManager;
 
 public class StaffManager {
-    private Set<Staff> staffList; // Elenco del personale
-    private Set<HolidayRequest> holidayRequests; // Elenco delle richieste di ferie
+    private static final Logger LOGGER = LogManager.getLogger(StaffManager.class);
+
+    private ArrayList<StaffEventReceiver> eventReceivers;
 
     public StaffManager() {
-        this.staffList = new HashSet<>(); // Inizializza l'elenco del personale come un Set vuoto e mutabile
+        this.eventReceivers = new ArrayList<>();
     }
 
-    /* METODI DEL MODELLO */
+    // ===== EVENT RECEIVER MANAGEMENT =====
+
+    public void addEventReceiver(StaffEventReceiver receiver) {
+        if (receiver != null && !eventReceivers.contains(receiver)) {
+            eventReceivers.add(receiver);
+        }
+    }
+
+    public void removeEventReceiver(StaffEventReceiver receiver) {
+        eventReceivers.remove(receiver);
+    }
+
+    // ===== METODI DEL MODELLO =====
 
     /**
      * Aggiunge un nuovo membro dello staff al sistema.
-     * @param jobType
-     * @param permanent
-     * @param name
-     * @param address
-     * @param contact
-     * @param fiscalCode
-     * @throws UseCaseLogicException
+     * @param jobType Tipo di lavoro
+     * @param permanent Se è permanente o occasionale
+     * @param name Nome del dipendente
+     * @param address Indirizzo
+     * @param contact Contatto
+     * @param fiscalCode Codice fiscale
+     * @throws UseCaseLogicException Se l'utente non è proprietario
      */
-    public void hireStaff(JobType jobType, boolean permanent, String name, String address, String contact, String fiscalCode) throws UseCaseLogicException {
+    public Staff hireStaff(JobType jobType, boolean permanent, String name, String address, String contact, String fiscalCode) throws UseCaseLogicException {
         User user = CatERing.getInstance().getUserManager().getCurrentUser();
 
         if (!user.isOwner()) {
-            throw new UseCaseLogicException();
+            LOGGER.warning("User " + user.getUserName() + " is not authorized to hire staff");
+            throw new UseCaseLogicException("User is not authorized to hire staff");
         }
+
         // Crea un'istanza di Staff utilizzando la fabbrica
         Staff newStaff = StaffFactory.createStaff(jobType, permanent, name, address, contact, fiscalCode);
-        staffList.add(newStaff);
-        // TODO: Bisogna salvare il nuovo personale nel database e notificare gli osservatori
+        
+        // Salva nel database
+        newStaff.saveNewStaff();
+        LOGGER.info("Successfully hired new staff: " + name + " (ID: " + newStaff.getId() + ")");
+        notifyStaffHired(newStaff);
+        return newStaff;
     }
 
     /**
@@ -49,12 +71,14 @@ public class StaffManager {
      * @param note Il testo della nota di valutazione
      * @param event L'evento per cui viene creata la nota
      * @param staff Il membro dello staff a cui assegnare la nota
-     * @throws IllegalArgumentException se i parametri sono nulli o non validi
+     * @throws UseCaseLogicException Se l'utente non è organizzatore
+     * @throws IllegalArgumentException Se i parametri sono nulli o non validi
      */
     public void addNotes(String note, Event event, Staff staff) throws UseCaseLogicException, IllegalArgumentException {
         User user = CatERing.getInstance().getUserManager().getCurrentUser();
         if (!user.isOrganizer()) {
-            throw new UseCaseLogicException();
+            LOGGER.warning("User " + user.getUserName() + " is not authorized to add evaluation notes");
+            throw new UseCaseLogicException("User is not authorized to add evaluation notes");
         }
 
         if (note == null || note.trim().isEmpty()) {
@@ -66,80 +90,113 @@ public class StaffManager {
         if (staff == null) {
             throw new IllegalArgumentException("Staff cannot be null");
         }
-        if (!staffList.contains(staff)) {
+        
+        // Verifica che lo staff esista nel database
+        Staff existingStaff = Staff.loadById(staff.getId());
+        if (existingStaff == null) {
             throw new IllegalArgumentException("Staff member not found in the system");
         }
         
-        // Creazione della nota di valutazione (responsabilità del Manager)
+        // Creazione della nota di valutazione
         EvaluationNote evaluationNote = new EvaluationNote(note.trim(), event.getId());
         
-        // Delega allo staff l'aggiunta della nota alla sua collezione
+        // Salva la nota nel database
+        evaluationNote.saveNewEvaluationNote(staff.getId());
+        // Aggiungi la nota anche all'oggetto staff in memoria
         staff.AddNote(evaluationNote);
-        
-        // TODO: Salva la nota nel database (forse?) e notificare gli osservatori
+        LOGGER.info("Added evaluation note for staff " + staff.getName() + " for event " + event.getName());
     }
 
     /**
      * Assegna un ruolo a un membro dello staff. (Delega la responsabilità all'EventManager)
-     * @param role
-     * @param staff
+     * @param role Il ruolo da assegnare
+     * @param staff Il membro dello staff
      */
     public void assignRole(Role role, Staff staff) throws UseCaseLogicException {
         User user = CatERing.getInstance().getUserManager().getCurrentUser();
 
-        if (!user.isOrganizer() || !user.isOwner()) {
-            throw new UseCaseLogicException();
+        if (!user.isOrganizer() && !user.isOwner()) {
+            LOGGER.warning("User " + user.getUserName() + " is not authorized to assign roles");
+            throw new UseCaseLogicException("User is not authorized to assign roles");
         }
 
         CatERing.getInstance().getEventManager().assignRole(role, staff);
+        LOGGER.info("Assigned role " + role.getDescription() + " to staff " + staff.getName());
     }
 
     /**
      * Rimuove un membro dello staff da un ruolo specifico. (Delega la responsabilità all'EventManager)
-     * @param role
+     * @param role Il ruolo da cui rimuovere lo staff
      */
     public void removeStaffFromRole(Role role) throws UseCaseLogicException {
         User user = CatERing.getInstance().getUserManager().getCurrentUser();
-        if (!user.isOrganizer() || !user.isOwner()) {
-            throw new UseCaseLogicException();
+        if (!user.isOrganizer() && !user.isOwner()) {
+            LOGGER.warning("User " + user.getUserName() + " is not authorized to remove role assignments");
+            throw new UseCaseLogicException("User is not authorized to remove role assignments");
         }
 
+        String staffName = role.isAssigned() ? role.getAssignedStaff().getName() : "unknown";
         CatERing.getInstance().getEventManager().removeAssignment(role);
+        LOGGER.info("Removed staff " + staffName + " from role " + role.getDescription());
     }
 
+    /**
+     * Consulta lo storico degli eventi (delega all'EventManager)
+     */
     public List<EventStaffSheet> consultHistoricalEvents() throws UseCaseLogicException {
         User user = CatERing.getInstance().getUserManager().getCurrentUser();
-        if (!user.isOrganizer() || !user.isOwner()) {
-            throw new UseCaseLogicException();
+        if (!user.isOrganizer() && !user.isOwner()) {
+            LOGGER.warning("User " + user.getUserName() + " is not authorized to consult historical events");
+            throw new UseCaseLogicException("User is not authorized to consult historical events");
         }
 
         return CatERing.getInstance().getEventManager().getAllEventSheets();
     }
+
     /**
      * Modifica i dati di un membro dello staff esistente.
-     * @param staff
-     * @param contact
-     * @param address
+     * @param staff Il membro dello staff da modificare
+     * @param contact Nuovo contatto (opzionale)
+     * @param address Nuovo indirizzo (opzionale)
      */
-    public void modifyStaffData(Staff staff, String contact, String address) throws UseCaseLogicException, IllegalArgumentException  {
+    public void modifyStaffData(Staff staff, String contact, String address) throws UseCaseLogicException, IllegalArgumentException {
         User user = CatERing.getInstance().getUserManager().getCurrentUser();
         if (!user.isOwner()) {
-            throw new UseCaseLogicException();
+            LOGGER.warning("User " + user.getUserName() + " is not authorized to modify staff data");
+            throw new UseCaseLogicException("User is not authorized to modify staff data");
         }
-        if(staff == null) {
+        
+        if (staff == null) {
             throw new IllegalArgumentException("Staff cannot be null");
         }
-        // Validazione dei parametri di contatto e indirizzo
-        if((contact != null && !contact.isBlank()) && (address == null || address.isBlank())) {
-            staff.setContact(contact.trim());
-        } else if((address != null && !address.isBlank()) && (contact == null || contact.isBlank())) {
-            staff.setAddress(address.trim());
-        } else if(contact != null && !contact.isBlank() && address != null && !address.isBlank()) {
-            staff.setContact(contact.trim());
-            staff.setAddress(address.trim());
-        } else {
+
+        // Verifica che lo staff esista nel database
+        Staff existingStaff = Staff.loadById(staff.getId());
+        if (existingStaff == null) {
+            throw new IllegalArgumentException("Staff member not found in the system");
+        }
+
+        boolean modified = false;
+
+        // Validazione e aggiornamento dei parametri
+        if (contact != null && !contact.isBlank()) {
+            existingStaff.setContact(contact.trim());
+            modified = true;
+        }
+        
+        if (address != null && !address.isBlank()) {
+            existingStaff.setAddress(address.trim());
+            modified = true;
+        }
+
+        if (!modified) {
             throw new IllegalArgumentException("At least one of contact or address must be provided");
         }
+
+        // Salva le modifiche nel database
+        existingStaff.updateStaff();
+        LOGGER.info("Modified staff data for: " + existingStaff.getName());
+        notifyStaffModified(existingStaff);
     }
 
     /**
@@ -148,27 +205,39 @@ public class StaffManager {
      */
     public Set<HolidayRequest> consultHolidayRequests() throws UseCaseLogicException {
         User user = CatERing.getInstance().getUserManager().getCurrentUser();
-        if (!user.isOrganizer() || !user.isOwner()) {
-            throw new UseCaseLogicException();
+        if (!user.isOrganizer() && !user.isOwner()) {
+            LOGGER.warning("User " + user.getUserName() + " is not authorized to consult holiday requests");
+            throw new UseCaseLogicException("User is not authorized to consult holiday requests");
         }
-        // Restituisce una copia del set di richieste di ferie
-        return Set.copyOf(holidayRequests);
+        
+        // Carica dal database
+        ArrayList<HolidayRequest> requests = HolidayRequest.loadAllHolidayRequests();
+        return new HashSet<>(requests);
     }
 
     /**
      * Ottiene la disponibilità di ferie rimanenti per un membro dello staff.
-     * @param staff
-     * @return
+     * @param staff Il membro dello staff
+     * @return Il numero di giorni di ferie rimanenti
      */
     public int getHolidaysAvailability(Staff staff) throws UseCaseLogicException, IllegalArgumentException {
         User user = CatERing.getInstance().getUserManager().getCurrentUser();
-        if (!user.isOwner()) {
-            throw new UseCaseLogicException();
+        if (!user.isOrganizer() && !user.isOwner()) {
+            LOGGER.warning("User " + user.getUserName() + " is not authorized to check holiday availability");
+            throw new UseCaseLogicException("User is not authorized to check holiday availability");
         }
+        
         if (staff == null) {
             throw new IllegalArgumentException("Staff cannot be null");
         }
-        return staff.getRemainingDaysOff();
+
+        // Carica i dati aggiornati dal database
+        Staff currentStaff = Staff.loadById(staff.getId());
+        if (currentStaff == null) {
+            throw new IllegalArgumentException("Staff member not found in the system");
+        }
+
+        return currentStaff.getRemainingDaysOff();
     }
 
     /**
@@ -177,17 +246,24 @@ public class StaffManager {
      */
     public List<Shift> consultShiftTable() throws UseCaseLogicException {
         User user = CatERing.getInstance().getUserManager().getCurrentUser();
-        if (user.isOwner()) {
-            throw new UseCaseLogicException();
+        if (!user.isOrganizer() && !user.isOwner()) {
+            LOGGER.warning("User " + user.getUserName() + " is not authorized to consult shift table");
+            throw new UseCaseLogicException("User is not authorized to consult shift table");
         }
+        
         return CatERing.getInstance().getShiftManager().getShiftTable();
     }
 
+    /**
+     * Accetta una richiesta di ferie
+     */
     public void acceptHolidayRequest(HolidayRequest request) throws UseCaseLogicException, IllegalArgumentException {
         User user = CatERing.getInstance().getUserManager().getCurrentUser();
         if (!user.isOwner()) {
-            throw new UseCaseLogicException();
+            LOGGER.warning("User " + user.getUserName() + " is not authorized to accept holiday requests");
+            throw new UseCaseLogicException("User is not authorized to accept holiday requests");
         }
+        
         if (request == null) {
             throw new IllegalArgumentException("Holiday request cannot be null");
         }
@@ -196,35 +272,59 @@ public class StaffManager {
         if (numberOfDaysRequested <= 0) {
             throw new IllegalArgumentException("Number of requested days must be greater than zero");
         }
+        
         Set<Date> requestedDays = request.getRequestedDays();
         if (requestedDays == null || requestedDays.isEmpty()) {
             throw new IllegalArgumentException("Requested days cannot be null or empty");
         }
+        
         Staff requester = request.getRequester();
         if (requester == null) {
             throw new IllegalArgumentException("Requester cannot be null");
         }
 
-        requester.reduceHolidays(numberOfDaysRequested);
-        requester.addHolidays(requestedDays);
+        // Carica i dati aggiornati dello staff dal database
+        Staff currentRequester = Staff.loadById(requester.getId());
+        if (currentRequester == null) {
+            throw new IllegalArgumentException("Requester not found in the system");
+        }
 
-        holidayRequests.remove(request);
-        // Notifica gli osservatori (se necessario)
+        // Verifica che abbia abbastanza giorni disponibili
+        if (currentRequester.getRemainingDaysOff() < numberOfDaysRequested) {
+            throw new IllegalArgumentException("Insufficient holiday days available");
+        }
+
+        currentRequester.reduceHolidays(numberOfDaysRequested);
+        currentRequester.addHolidays(requestedDays);
+
+        notifyStaffModified(currentRequester);
+        notifyHolidayRequestDeleted(request);
+        
+        LOGGER.info("Accepted holiday request for " + currentRequester.getName() + " (" + numberOfDaysRequested + " days)");
     }
 
+    /**
+     * Rifiuta una richiesta di ferie
+     */
     public void rejectHolidayRequest(HolidayRequest request) throws UseCaseLogicException, IllegalArgumentException {
         User user = CatERing.getInstance().getUserManager().getCurrentUser();
         if (!user.isOwner()) {
-            throw new UseCaseLogicException();
+            LOGGER.warning("User " + user.getUserName() + " is not authorized to reject holiday requests");
+            throw new UseCaseLogicException("User is not authorized to reject holiday requests");
         }
+        
         if (request == null) {
             throw new IllegalArgumentException("Holiday request cannot be null");
         }
+
+        // Notifica per eliminare la richiesta dal database (è stata rifiutata)
+        notifyHolidayRequestDeleted(request);
         
-        holidayRequests.remove(request);
-        // Potrebbe essere necessario notificare il richiedente o gli osservatori
+        LOGGER.info("Rejected holiday request for " + request.getRequester().getName());
     }
-    
+
+    // ===== DATABASE OPERATIONS =====
+
     /**
      * Trova un membro dello staff per codice fiscale.
      * 
@@ -232,14 +332,7 @@ public class StaffManager {
      * @return Il membro dello staff trovato o null se non esiste
      */
     public Staff findStaffByFiscalCode(String fiscalCode) {
-        if (fiscalCode == null || fiscalCode.trim().isEmpty()) {
-            return null;
-        }
-        
-        return staffList.stream()
-                .filter(staff -> fiscalCode.equals(staff.getFiscalCode()))
-                .findFirst()
-                .orElse(null);
+        return Staff.loadByFiscalCode(fiscalCode);
     }
     
     /**
@@ -249,22 +342,55 @@ public class StaffManager {
      * @return Il membro dello staff trovato o null se non esiste
      */
     public Staff findStaffByName(String name) {
-        if (name == null || name.trim().isEmpty()) {
-            return null;
-        }
-        
-        return staffList.stream()
-                .filter(staff -> name.equals(staff.getName()))
-                .findFirst()
-                .orElse(null);
+        return Staff.loadByName(name);
+    }
+    
+    /**
+     * Trova un membro dello staff per ID.
+     * 
+     * @param id L'ID da cercare
+     * @return Il membro dello staff trovato o null se non esiste
+     */
+    public Staff findStaffById(int id) {
+        return Staff.loadById(id);
+    }
+
+    /**
+     * Ottiene tutto il personale per tipo di lavoro.
+     * 
+     * @param jobType Il tipo di lavoro
+     * @return Lista del personale di quel tipo
+     */
+    public ArrayList<Staff> getStaffByJobType(JobType jobType) {
+        return Staff.loadByJobType(jobType);
     }
     
     /**
      * Ottiene tutti i membri dello staff.
      * 
-     * @return Una copia del set di staff
+     * @return Lista di tutto il personale
      */
-    public Set<Staff> getAllStaff() {
-        return Set.copyOf(staffList);
+    public ArrayList<Staff> getAllStaff() {
+        return Staff.loadAllStaff();
+    }
+
+    // ===== NOTIFICATION METHODS =====
+
+    private void notifyStaffHired(Staff staff) {
+        for (StaffEventReceiver receiver : eventReceivers) {
+            receiver.updateStaffHired(staff);
+        }
+    }
+
+    private void notifyStaffModified(Staff staff) {
+        for (StaffEventReceiver receiver : eventReceivers) {
+            receiver.updateStaffModified(staff);
+        }
+    }
+
+    private void notifyHolidayRequestDeleted(HolidayRequest request) {
+        for (StaffEventReceiver receiver : eventReceivers) {
+            receiver.updateHolidayRequestDeleted(request);
+        }
     }
 }

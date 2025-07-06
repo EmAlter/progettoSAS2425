@@ -1,5 +1,4 @@
 package catering.businesslogic.staff;
-import catering.businesslogic.event.Role;
 
 /**
  * Interface for receiving staff-related event notifications.
@@ -8,14 +7,6 @@ import catering.businesslogic.event.Role;
  * events occur in the system.
  */
 public interface StaffEventReceiver {
-    /**
-     * Called when a new role is created and added to an EventStaffSheet
-     * 
-     * @param r  The role that was created
-     * @param sh The EventStaffSheet to which the role was added
-     */
-    void updateRoleCreated(Role r);
-
     /**
      * Called when new staff is hired into the system
      * 
