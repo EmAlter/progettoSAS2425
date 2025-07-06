@@ -1,6 +1,7 @@
 package catering.businesslogic.staff;
 
 import java.util.Set;
+import java.util.HashSet;
 import java.util.Date;
 
 public abstract class Staff {
@@ -32,8 +33,8 @@ public abstract class Staff {
         this.contact = contact;
         this.fiscalCode = fiscalCode;
         this.remainingDaysOff = 30; // Inizializza i giorni di ferie rimanenti a 30
-        this.holidays = Set.of(); // Inizializza le ferie come un set vuoto
-        this.evaluationNotes = Set.of(); // Inizializza le note di valutazione come un set vuoto
+        this.holidays = new HashSet<>(); // Inizializza le ferie come un set vuoto e mutabile
+        this.evaluationNotes = new HashSet<>(); // Inizializza le note di valutazione come un set vuoto e mutabile
     }
 
     public JobType getJobType() {
@@ -111,14 +112,16 @@ public abstract class Staff {
         this.remainingDaysOff = remainingDaysOff;
     }
 
-    public void addHoliday(Date holiday) {
-        if (holiday == null) {
-            throw new IllegalArgumentException("Holiday date cannot be null");
+    public void addHolidays(Set<Date> days) {
+        if (days == null || days.isEmpty()) {
+            throw new IllegalArgumentException("Holidays cannot be null or empty");
         }
-        if (holidays.contains(holiday)) {
-            throw new IllegalArgumentException("Holiday already exists");
+        for (Date day : days) {
+            if (day == null) {
+                throw new IllegalArgumentException("Holiday date cannot be null");
+            }
+            holidays.add(day);
         }
-        holidays.add(holiday);
     }
 
     public void AddNote(EvaluationNote note) {
