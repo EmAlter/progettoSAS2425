@@ -97,8 +97,8 @@ public class HolidayRequest {
      * 
      * @return Lista di tutte le richieste di ferie
      */
-    public static ArrayList<HolidayRequest> loadAllHolidayRequests() {
-        ArrayList<HolidayRequest> requests = new ArrayList<>();
+    public static Set<HolidayRequest> loadAllHolidayRequests() {
+        Set<HolidayRequest> requests = new HashSet<>();
         String query = "SELECT * FROM HolidayRequests ORDER BY id";
 
         LOGGER.info("Loading all holiday requests from database");

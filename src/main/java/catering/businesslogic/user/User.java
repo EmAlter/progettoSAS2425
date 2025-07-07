@@ -18,6 +18,7 @@ public class User {
     private int id;
     private String username;
     private Set<Role> roles;
+    private int staffId;
 
     public User() {
         this(null);
@@ -34,8 +35,8 @@ public class User {
      * 
      * @return true se l'utente ha uno dei ruoli di staff, false altrimenti
      */
-    public boolean isStaff() {
-        return roles.contains(Role.CUOCO) || roles.contains(Role.CHEF) || roles.contains(Role.SERVIZIO);
+    public boolean isOperationalStaff() {
+        return isCook() || isChef() || isServiceStaff();
     }
 
     public boolean isCook() {
@@ -68,6 +69,14 @@ public class User {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public int getStaffId() {
+        return staffId;
+    }
+
+    public void setStaffId(int staffId) {
+        this.staffId = staffId;
     }
 
     public String toString() {

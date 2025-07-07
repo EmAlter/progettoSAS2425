@@ -208,7 +208,7 @@ public class StaffManager {
         }
         
         // Carica dal database
-        ArrayList<HolidayRequest> requests = HolidayRequest.loadAllHolidayRequests();
+        Set<HolidayRequest> requests = HolidayRequest.loadAllHolidayRequests();
         return new HashSet<>(requests);
     }
 
@@ -328,66 +328,75 @@ public class StaffManager {
      * @throws IllegalArgumentException Se la richiesta non è valida
      */
     private void validateHolidayRequest(HolidayRequest request) throws IllegalArgumentException {
-    if (request.getNumberOfDays() <= 0) {
-        throw new IllegalArgumentException("Number of requested days must be greater than zero");
-    }
-    
-    if (request.getRequestedDays() == null || request.getRequestedDays().isEmpty()) {
-        throw new IllegalArgumentException("Requested days cannot be null or empty");
-    }
-    
-    if (request.getRequester() == null) {
-        throw new IllegalArgumentException("Requester cannot be null");
+        if (request.getNumberOfDays() <= 0) {
+            throw new IllegalArgumentException("Number of requested days must be greater than zero");
+        }
+        
+        if (request.getRequestedDays() == null || request.getRequestedDays().isEmpty()) {
+            throw new IllegalArgumentException("Requested days cannot be null or empty");
+        }
+        
+        if (request.getRequester() == null) {
+            throw new IllegalArgumentException("Requester cannot be null");
+        }
+
+        // Verifica disponibilità giorni dal database
+        Staff currentRequester = Staff.loadById(request.getRequester().getId());
+        if (currentRequester == null) {
+            throw new IllegalArgumentException("Requester not found in the system");
+        }
+
+        if (currentRequester.getRemainingDaysOff() < request.getNumberOfDays()) {
+            throw new IllegalArgumentException("Insufficient holiday days available");
+        }
+
     }
 
-    // Verifica disponibilità giorni dal database
-    Staff currentRequester = Staff.loadById(request.getRequester().getId());
-    if (currentRequester == null) {
-        throw new IllegalArgumentException("Requester not found in the system");
+    /**
+     * Crea una richiesta di ferie per un membro dello staff.
+     * 
+     * @param staff Il membro dello staff che richiede le ferie
+     * @param dates Le date richieste
+     * @param description Descrizione della richiesta
+     * @return La richiesta creata
+     * @throws UseCaseLogicException Se l'utente non è autorizzato
+     * @throws IllegalArgumentException Se i parametri sono nulli o non validi
+     */
+    public HolidayRequest createHolidayRequest(Staff staff, Set<Date> dates, String description) throws UseCaseLogicException, IllegalArgumentException {
+        User user = CatERing.getInstance().getUserManager().getCurrentUser();
+
+        if (staff == null) {
+            throw new IllegalArgumentException("Staff cannot be null");
+        }
+
+        if (dates == null || dates.isEmpty()) {
+            throw new IllegalArgumentException("Requested dates cannot be null or empty");
+        }
+        
+        // Verifica che l'utente sia autorizzato a creare richieste di ferie
+        // Se è staff, può creare richieste solo per se stesso
+        if (user.isOperationalStaff() && !isCurrentUserStaff(staff)) {
+            throw new UseCaseLogicException("Staff can only create holiday requests for themselves");
+        }
+        
+        HolidayRequest request = staff.createHolidayRequest(dates, description);
+        
+        notifyHolidayRequestCreated(request);
+        
+        LOGGER.info("Created holiday request for " + staff.getName());
+        return request;
     }
 
-    if (currentRequester.getRemainingDaysOff() < request.getNumberOfDays()) {
-        throw new IllegalArgumentException("Insufficient holiday days available");
+    /**
+     * Verifica se l'utente corrente corrisponde al membro dello staff specificato.
+     * 
+     * @param staff Il membro dello staff da verificare
+     * @return true se l'utente corrente è lo stesso staff, false altrimenti
+     */
+    private boolean isCurrentUserStaff(Staff staff) {
+        User currentUser = CatERing.getInstance().getUserManager().getCurrentUser();
+        return currentUser.getStaffId() == staff.getId();
     }
-
-}
-
-/**
- * Crea una richiesta di ferie per un membro dello staff.
- * 
- * @param staff Il membro dello staff che richiede le ferie
- * @param dates Le date richieste
- * @param description Descrizione della richiesta
- * @return La richiesta creata
- * @throws UseCaseLogicException Se l'utente non è autorizzato
- */
-public HolidayRequest createHolidayRequest(Staff staff, Set<Date> dates, String description) throws UseCaseLogicException {
-    User user = CatERing.getInstance().getUserManager().getCurrentUser();
-    
-    // Verifica che l'utente sia autorizzato a creare richieste di ferie
-    // Se è staff, può creare richieste solo per se stesso
-    if (user.isStaff() && !isCurrentUserStaff(staff)) {
-        throw new UseCaseLogicException("Staff can only create holiday requests for themselves");
-    }
-    
-    HolidayRequest request = staff.createHolidayRequest(dates, description);
-    
-    notifyHolidayRequestCreated(request);
-    
-    LOGGER.info("Created holiday request for " + staff.getName());
-    return request;
-}
-
-/**
- * Verifica se l'utente corrente corrisponde al membro dello staff specificato.
- * 
- * @param staff Il membro dello staff da verificare
- * @return true se l'utente corrente è lo stesso staff, false altrimenti
- */
-private boolean isCurrentUserStaff(Staff staff) {
-    User currentUser = CatERing.getInstance().getUserManager().getCurrentUser();
-    return currentUser.getId() == staff.getId();
-}
 
     // ===== DATABASE OPERATIONS =====
 
