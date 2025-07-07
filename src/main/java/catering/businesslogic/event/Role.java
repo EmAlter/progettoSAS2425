@@ -50,7 +50,7 @@ public class Role {
 
     public void removeStaff() {
         if (assignedStaff != null) {
-            assignedStaff = null; // Rimuove l'assegnazione dello staff a questo ruolo
+            assignedStaff = null; // Rimuove l'assegnazione dello staff a questo ruolo impostando a null
         }
     }
 

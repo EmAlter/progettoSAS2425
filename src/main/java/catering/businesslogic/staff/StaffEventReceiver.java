@@ -34,5 +34,12 @@ public interface StaffEventReceiver {
      * @param staff The staff member whose evaluation notes were modified
      * @param note The evaluation note that was added
      */
-    void updateEvaluationNoteAdded(Staff staff, EvaluationNote note); 
+    void updateEvaluationNoteAdded(Staff staff, EvaluationNote note);
+
+    /**
+     * Called when a holiday request is created
+     * 
+     * @param request The holiday request that was created
+     */
+    void updateHolidayRequestCreated(HolidayRequest request);
 }

@@ -177,8 +177,10 @@ public class EventManager {
     }
 
     /**
-     * Creates a new Role for the current EventStaffSheet.
-     * If no event is selected, logs a warning and does nothing.
+     *  Crea un nuovo ruolo per l'evento corrente.
+     * @param description Descrizione del ruolo (es. "Addetto alla griglia", "Addetto alla sala", ecc.)
+     * @param type Tipo di lavoro associato al ruolo (CUOCO, CHEF, SERVIZIO)
+     * * @return Il nuovo ruolo creato
      */
     public Role createRole(String description, JobType type) throws UseCaseLogicException{
         if (selectedEvent == null) {
@@ -204,7 +206,10 @@ public class EventManager {
     }
 
     /**
-     * Assigns a role to a staff member in the specified EventStaffSheet.
+     * Assegna un ruolo a un membro dello staff nella EventStaffSheet corrente.
+     * @param r Il ruolo da assegnare
+     * @param s Il membro dello staff a cui assegnare il ruolo
+     * @throws UseCaseLogicException Se non è selezionato un evento o se non esiste una EventStaffSheet per l'evento corrente
      */
     public void assignRole(Role r, Staff s) throws UseCaseLogicException {
         if (selectedEvent == null) {
@@ -225,8 +230,10 @@ public class EventManager {
     }
     
     /**
-     * Removes an assignment of a staff member from a role in the specified
-     * EventStaffSheet.
+     * Rimuove l'assegnazione di un ruolo a un membro dello staff nella EventStaffSheet corrente.
+     * @param r Il ruolo da disassegnare
+     * @throws UseCaseLogicException Se non è selezionato un evento, se il ruolo è null o se non esiste una EventStaffSheet per l'evento corrente
+     * 
      */
     public void removeAssignment(Role r) throws UseCaseLogicException {
         if (selectedEvent == null) {

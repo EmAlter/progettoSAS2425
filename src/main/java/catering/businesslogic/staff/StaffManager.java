@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.logging.Logger;
+import java.util.Date;
 
 import catering.businesslogic.CatERing;
 import catering.businesslogic.UseCaseLogicException;
@@ -137,7 +138,9 @@ public class StaffManager {
     }
 
     /**
-     * Consulta lo storico degli eventi (delega all'EventManager)
+     * Consulta gli eventi storici registrati nel sistema. (delega la responsabilità all'EventManager)
+     * @return Una lista di EventStaffSheet che rappresentano gli eventi storici
+     * @throws UseCaseLogicException
      */
     public List<EventStaffSheet> consultHistoricalEvents() throws UseCaseLogicException {
         User user = CatERing.getInstance().getUserManager().getCurrentUser();
@@ -236,6 +239,7 @@ public class StaffManager {
 
     /**
      * Consulta il tabellone dei turni del personale.
+     * @throws UseCaseLogicException Se l'utente non è organizzatore o proprietario
      * @return Una lista dei turni attualmente registrati
      */
     public List<Shift> consultShiftTable() throws UseCaseLogicException {
@@ -249,7 +253,11 @@ public class StaffManager {
     }
 
     /**
-     * Accetta una richiesta di ferie
+     * Accetta una richiesta di ferie.
+     * 
+     * @param request La richiesta di ferie da accettare
+     * @throws UseCaseLogicException Se l'utente non è proprietario
+     * @throws IllegalArgumentException Se la richiesta è nulla o non valida
      */
     public void acceptHolidayRequest(HolidayRequest request) throws UseCaseLogicException, IllegalArgumentException {
         User user = CatERing.getInstance().getUserManager().getCurrentUser();
@@ -290,7 +298,10 @@ public class StaffManager {
     }
 
     /**
-     * Rifiuta una richiesta di ferie
+     * Rifiuta una richiesta di ferie.
+     * @param request La richiesta di ferie da rifiutare
+     * @throws UseCaseLogicException Se l'utente non è proprietario
+     * @throws IllegalArgumentException Se la richiesta è nulla o non valida
      */
     public void rejectHolidayRequest(HolidayRequest request) throws UseCaseLogicException, IllegalArgumentException {
         User user = CatERing.getInstance().getUserManager().getCurrentUser();
@@ -309,6 +320,13 @@ public class StaffManager {
         LOGGER.info("Rejected holiday request for " + request.getRequester().getName());
     }
 
+
+    /**
+     * Controllo aggiunto fatto dal sistema per verificare la validità di una richiesta di ferie.
+     * 
+     * @param request La richiesta di ferie da verificare
+     * @throws IllegalArgumentException Se la richiesta non è valida
+     */
     private void validateHolidayRequest(HolidayRequest request) throws IllegalArgumentException {
     if (request.getNumberOfDays() <= 0) {
         throw new IllegalArgumentException("Number of requested days must be greater than zero");
@@ -331,6 +349,44 @@ public class StaffManager {
     if (currentRequester.getRemainingDaysOff() < request.getNumberOfDays()) {
         throw new IllegalArgumentException("Insufficient holiday days available");
     }
+
+}
+
+/**
+ * Crea una richiesta di ferie per un membro dello staff.
+ * 
+ * @param staff Il membro dello staff che richiede le ferie
+ * @param dates Le date richieste
+ * @param description Descrizione della richiesta
+ * @return La richiesta creata
+ * @throws UseCaseLogicException Se l'utente non è autorizzato
+ */
+public HolidayRequest createHolidayRequest(Staff staff, Set<Date> dates, String description) throws UseCaseLogicException {
+    User user = CatERing.getInstance().getUserManager().getCurrentUser();
+    
+    // Verifica che l'utente sia autorizzato a creare richieste di ferie
+    // Se è staff, può creare richieste solo per se stesso
+    if (user.isStaff() && !isCurrentUserStaff(staff)) {
+        throw new UseCaseLogicException("Staff can only create holiday requests for themselves");
+    }
+    
+    HolidayRequest request = staff.createHolidayRequest(dates, description);
+    
+    notifyHolidayRequestCreated(request);
+    
+    LOGGER.info("Created holiday request for " + staff.getName());
+    return request;
+}
+
+/**
+ * Verifica se l'utente corrente corrisponde al membro dello staff specificato.
+ * 
+ * @param staff Il membro dello staff da verificare
+ * @return true se l'utente corrente è lo stesso staff, false altrimenti
+ */
+private boolean isCurrentUserStaff(Staff staff) {
+    User currentUser = CatERing.getInstance().getUserManager().getCurrentUser();
+    return currentUser.getId() == staff.getId();
 }
 
     // ===== DATABASE OPERATIONS =====
@@ -405,8 +461,14 @@ public class StaffManager {
     }
 
     private void notifyEvaluationNoteAdded(Staff staff, EvaluationNote note) {
-    for (StaffEventReceiver receiver : eventReceivers) {
+        for (StaffEventReceiver receiver : eventReceivers) {
         receiver.updateEvaluationNoteAdded(staff, note);
+        }
     }
-}
+    
+    private void notifyHolidayRequestCreated(HolidayRequest request) {
+        for (StaffEventReceiver receiver : eventReceivers) {
+            receiver.updateHolidayRequestCreated(request);
+        }
+    }
 }

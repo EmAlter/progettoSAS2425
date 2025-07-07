@@ -184,6 +184,22 @@ public abstract class Staff {
         return true; // Il personale è disponibile se non ha ferie nelle date specificate
     }
 
+    /**
+     * Questo membro del personale crea una richiesta di ferie.
+     * 
+     * @param dates Le date richieste per le ferie.
+     * @param description Una descrizione della richiesta di ferie.
+     * @return Una nuova istanza di HolidayRequest.
+     * @throws IllegalArgumentException Se le date sono nulle o vuote.
+     */
+    public HolidayRequest createHolidayRequest(Set<Date> dates, String description) {
+        if (dates == null || dates.isEmpty()) {
+            throw new IllegalArgumentException("Dates cannot be null or empty");
+        }
+        return new HolidayRequest(this, dates, description);
+    }
+
+
     // ===== DATABASE OPERATIONS =====
 
     /**

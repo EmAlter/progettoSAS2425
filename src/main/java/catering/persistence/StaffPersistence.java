@@ -30,5 +30,10 @@ public class StaffPersistence implements StaffEventReceiver {
     public void updateEvaluationNoteAdded(Staff staff, EvaluationNote note) {
         note.saveNewEvaluationNote(staff.getId());
     }
+
+    @Override
+    public void updateHolidayRequestCreated(HolidayRequest request) {
+        request.saveNewHolidayRequest();
+    }
     
 }

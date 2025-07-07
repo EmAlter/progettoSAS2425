@@ -29,12 +29,25 @@ public class User {
         this.roles = new HashSet<>();
     }
 
+    /**
+     * Verifica se l'utente è uno Staff in generale.
+     * 
+     * @return true se l'utente ha uno dei ruoli di staff, false altrimenti
+     */
+    public boolean isStaff() {
+        return roles.contains(Role.CUOCO) || roles.contains(Role.CHEF) || roles.contains(Role.SERVIZIO);
+    }
+
     public boolean isCook() {
         return roles.contains(Role.CUOCO);
     }
 
     public boolean isChef() {
         return roles.contains(Role.CHEF);
+    }
+
+    public boolean isServiceStaff() {
+        return roles.contains(Role.SERVIZIO);
     }
 
     public boolean isOrganizer() {

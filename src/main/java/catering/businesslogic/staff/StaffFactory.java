@@ -15,7 +15,7 @@ public class StaffFactory {
      * @throws IllegalArgumentException Se il JobType non è supportato.
      */
     public static Staff createStaff(JobType jobType, boolean permanent, String name, 
-                                   String address, String contact, String fiscalCode) {
+                                   String address, String contact, String fiscalCode) throws IllegalArgumentException {
         if (jobType == null) {
             throw new IllegalArgumentException("JobType cannot be null");
         }
