@@ -34,20 +34,26 @@ public class EventStaffSheet {
         LOGGER.info("Current state: " + this.toString());
     }
 
-    /**
-     * Aggiunge un nuovo ruolo alla lista di ruoli assegnati a questo evento.
-     * @param role
-     */
     public int getId() {    
         return id;
     }
 
+    /**
+     * Aggiunge un nuovo ruolo alla lista di ruoli assegnati a questo evento.
+     * @param role
+     */
     public void addRole(Role role) {
         assignments.add(role);
         LOGGER.info("Added new role: " + role.getDescription() + " of type: " + role.getType() + " to EventStaffSheet.");
         LOGGER.info("Current state: " + this.toString());
     }
 
+    /**
+     * Imposta una nota per questo EventStaffSheet.
+     * Se la nota è null, viene impostata come stringa vuota.
+     * Se la nota è cambiata, viene registrato un messaggio di log informativo.
+     * @param note
+     */
     public void setNote(String note) {
         String oldNote = this.note;
         this.note = (note != null) ? note : "";
