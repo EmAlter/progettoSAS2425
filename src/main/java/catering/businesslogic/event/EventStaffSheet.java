@@ -38,6 +38,10 @@ public class EventStaffSheet {
      * Aggiunge un nuovo ruolo alla lista di ruoli assegnati a questo evento.
      * @param role
      */
+    public int getId() {    
+        return id;
+    }
+
     public void addRole(Role role) {
         assignments.add(role);
         LOGGER.info("Added new role: " + role.getDescription() + " of type: " + role.getType() + " to EventStaffSheet.");
