@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
-import java.util.Date;
+import java.sql.Date;
 import java.util.Set;
 import java.util.List;
 import java.util.logging.Logger;
@@ -42,6 +42,7 @@ public class HolidayRequestTest {
 
     @BeforeEach
     void setup() {
+        PersistenceManager.initializeDatabase("database/catering_init_sqlite.sql");
         try {
             // Set up users with different roles
             owner = User.load("Francesca"); // From sample data - organizer with owner privileges

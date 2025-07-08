@@ -2,10 +2,11 @@ package catering.businesslogic.staff;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Date;
+
 import java.util.Set;
 import java.util.HashSet;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.logging.Logger;
 
 import catering.persistence.PersistenceManager;
@@ -213,12 +214,21 @@ public class HolidayRequest {
             @Override
             public void handle(ResultSet rs) throws SQLException {
                 try {
-                    Date requestedDate = rs.getDate("requested_date");
-                    if (requestedDate != null) {
-                        requestedDays.add(requestedDate);
+                    String dateStr = rs.getString("requested_date");
+                    
+                    if (dateStr != null && !dateStr.trim().isEmpty()) {
+                        try {
+                            Date requestedDate = Date.valueOf(dateStr.trim());
+                            requestedDays.add(requestedDate);
+                            LOGGER.fine("Successfully added date: " + requestedDate + " to request " + id);
+                        } catch (IllegalArgumentException e) {
+                            LOGGER.warning("Failed to parse date '" + dateStr + "' for holiday request " + id + ": " + e.getMessage());
+                        }
+                    } else {
+                        LOGGER.warning("Null or empty date string for holiday request " + id);
                     }
                 } catch (Exception e) {
-                    LOGGER.warning("Error parsing requested date for holiday request " + id + ": " + e.getMessage());
+                    LOGGER.warning("Error processing requested date for holiday request " + id + ": " + e.getMessage());
                 }
             }
         }, id);
