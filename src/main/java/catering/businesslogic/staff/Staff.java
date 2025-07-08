@@ -5,7 +5,8 @@ import java.sql.SQLException;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.ArrayList;
-import java.sql.Date;
+import java.time.LocalDate;
+
 import java.util.logging.Logger;
 
 import catering.persistence.PersistenceManager;
@@ -25,7 +26,7 @@ public abstract class Staff {
     private int remainingDaysOff;
     
     // Collections mantenute in memoria (come Event.services)
-    private Set<Date> holidays;
+    private Set<LocalDate> holidays;
     private Set<EvaluationNote> evaluationNotes;
 
     /**
@@ -89,7 +90,7 @@ public abstract class Staff {
         return remainingDaysOff;
     }
 
-    public Set<Date> getHolidays() {
+    public Set<LocalDate> getHolidays() {
         return new HashSet<>(holidays); // Return a copy
     }
 
@@ -152,11 +153,11 @@ public abstract class Staff {
         this.remainingDaysOff -= daysToReduce;
     }
 
-    public void addHolidays(Set<Date> days) {
+    public void addHolidays(Set<LocalDate> days) {
         if (days == null || days.isEmpty()) {
             throw new IllegalArgumentException("Holidays cannot be null or empty");
         }
-        for (Date day : days) {
+        for (LocalDate day : days) {
             if (day == null) {
                 throw new IllegalArgumentException("Holiday date cannot be null");
             }
@@ -171,12 +172,12 @@ public abstract class Staff {
         evaluationNotes.add(note);
     }
 
-    public boolean isAvailable(Set<Date> dates) {
+    public boolean isAvailable(Set<LocalDate> dates) {
         if (dates == null || dates.isEmpty()) {
             throw new IllegalArgumentException("Dates cannot be null or empty");
         }
 
-        for (Date date : dates) {
+        for (LocalDate date : dates) {
             if (holidays.contains(date)) {
                 return false; // Il personale non è disponibile se ha ferie in queste date
             }
@@ -192,7 +193,7 @@ public abstract class Staff {
      * @return Una nuova istanza di HolidayRequest.
      * @throws IllegalArgumentException Se le date sono nulle o vuote.
      */
-    public HolidayRequest createHolidayRequest(Set<Date> dates, String description) {
+    public HolidayRequest createHolidayRequest(Set<LocalDate> dates, String description) {
         if (dates == null || dates.isEmpty()) {
             throw new IllegalArgumentException("Dates cannot be null or empty");
         }
@@ -318,7 +319,10 @@ public abstract class Staff {
     }
 
     /**
-     * Helper method per creare un Staff dal ResultSet
+     * Crea un oggetto Staff da un ResultSet
+     * @param rs
+     * @return
+     * @throws SQLException
      */
     private static Staff createStaffFromResultSet(ResultSet rs) throws SQLException {
         try {
@@ -444,9 +448,11 @@ public abstract class Staff {
             @Override
             public void handle(ResultSet rs) throws SQLException {
                 try {
-                    Date holidayDate = rs.getDate("holiday_date");
-                    if (holidayDate != null) {
+                    String dateStr = rs.getString("holiday_date");
+                    if (dateStr != null && !dateStr.trim().isEmpty()) {
+                        LocalDate holidayDate = LocalDate.parse(dateStr.trim());
                         holidays.add(holidayDate);
+                        LOGGER.fine("Loaded holiday date: " + holidayDate + " for staff " + id);
                     }
                 } catch (Exception e) {
                     LOGGER.warning("Error parsing holiday date for staff " + id + ": " + e.getMessage());
@@ -468,8 +474,13 @@ public abstract class Staff {
         // Poi inserisce le nuove ferie
         if (!holidays.isEmpty()) {
             String insertQuery = "INSERT INTO StaffHolidays (staff_id, holiday_date) VALUES (?, ?)";
-            for (Date holiday : holidays) {
-                PersistenceManager.executeUpdate(insertQuery, id, holiday);
+            for (LocalDate holiday : holidays) {
+                if (holiday == null) {
+                    LOGGER.warning("Skipping null holiday date for staff " + id);
+                    continue; // Skip null dates
+                }
+                String dateStr = holiday.toString();
+                PersistenceManager.executeUpdate(insertQuery, id, dateStr);
             }
         }
     }

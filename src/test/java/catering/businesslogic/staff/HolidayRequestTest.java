@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
-import java.sql.Date;
+import java.time.LocalDate;
 import java.util.Set;
 import java.util.List;
 import java.util.logging.Logger;
@@ -233,9 +233,9 @@ public class HolidayRequestTest {
 
             // Verify holidays were added to staff
             Staff updatedStaff = Staff.loadById(testCook.getId());
-            Set<Date> staffHolidays = updatedStaff.getHolidays();
+            Set<LocalDate> staffHolidays = updatedStaff.getHolidays();
             
-            for (Date requestedDay : requestToAccept.getRequestedDays()) {
+            for (LocalDate requestedDay : requestToAccept.getRequestedDays()) {
                 assertTrue(staffHolidays.contains(requestedDay), 
                           "Staff holidays should contain requested day: " + requestedDay);
             }
@@ -284,9 +284,9 @@ public class HolidayRequestTest {
 
             // Verify holidays were NOT added to staff
             Staff unchangedStaff = Staff.loadById(testServiceStaff.getId());
-            Set<Date> staffHolidays = unchangedStaff.getHolidays();
+            Set<LocalDate> staffHolidays = unchangedStaff.getHolidays();
             
-            for (Date requestedDay : requestToReject.getRequestedDays()) {
+            for (LocalDate requestedDay : requestToReject.getRequestedDays()) {
                 assertFalse(staffHolidays.contains(requestedDay), 
                            "Staff holidays should NOT contain rejected day: " + requestedDay);
             }
@@ -507,19 +507,19 @@ public class HolidayRequestTest {
             Staff finalChef = Staff.loadById(testChef.getId());
 
             // Cook should have accepted holidays
-            for (Date day : cookRequest.getRequestedDays()) {
+            for (LocalDate day : cookRequest.getRequestedDays()) {
                 assertTrue(finalCook.getHolidays().contains(day), 
                           "Cook should have accepted holiday: " + day);
             }
 
             // Service staff should NOT have rejected holidays
-            for (Date day : serviceRequest.getRequestedDays()) {
+            for (LocalDate day : serviceRequest.getRequestedDays()) {
                 assertFalse(finalService.getHolidays().contains(day), 
                            "Service staff should NOT have rejected holiday: " + day);
             }
 
             // Chef should NOT have the excessive holidays
-            for (Date day : chefRequest.getRequestedDays()) {
+            for (LocalDate day : chefRequest.getRequestedDays()) {
                 assertFalse(finalChef.getHolidays().contains(day), 
                            "Chef should NOT have excessive holiday: " + day);
             }

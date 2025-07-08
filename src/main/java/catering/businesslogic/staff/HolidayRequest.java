@@ -2,12 +2,12 @@ package catering.businesslogic.staff;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Date;
 
 import java.util.Set;
 import java.util.HashSet;
 import java.util.ArrayList;
 import java.util.logging.Logger;
+import java.time.LocalDate;
 
 import catering.persistence.PersistenceManager;
 import catering.persistence.ResultHandler;
@@ -18,7 +18,7 @@ public class HolidayRequest {
 
     private int id; // ID per la persistenza
     private Staff requester; // Personale che richiede le ferie
-    private Set<Date> requestedDays; // Giorni richiesti per le ferie
+    private Set<LocalDate> requestedDays; // Giorni richiesti per le ferie
     private String description; // Descrizione della richiesta di ferie
 
     /**
@@ -28,7 +28,7 @@ public class HolidayRequest {
      * @param requestedDays I giorni richiesti per le ferie.
      * @param description La descrizione della richiesta di ferie.
      */
-    public HolidayRequest(Staff requester, Set<Date> requestedDays, String description) {
+    public HolidayRequest(Staff requester, Set<LocalDate> requestedDays, String description) {
         if (requestedDays == null || requestedDays.isEmpty()) {
             throw new IllegalArgumentException("Requested days cannot be null or empty");
         }
@@ -58,7 +58,7 @@ public class HolidayRequest {
         return description;
     }
 
-    public Set<Date> getRequestedDays() {
+    public Set<LocalDate> getRequestedDays() {
         return new HashSet<>(requestedDays); // Return a copy
     }
 
@@ -84,7 +84,7 @@ public class HolidayRequest {
         this.description = description;
     }
 
-    public void setRequestedDays(Set<Date> requestedDays) {
+    public void setRequestedDays(Set<LocalDate> requestedDays) {
         if (requestedDays == null || requestedDays.isEmpty()) {
             throw new IllegalArgumentException("Requested days cannot be null or empty");
         }
@@ -177,7 +177,10 @@ public class HolidayRequest {
     }
 
     /**
-     * Helper method per creare una HolidayRequest dal ResultSet
+     * Crea un oggetto HolidayRequest da un ResultSet
+     * 
+     * @param rs Il ResultSet contenente i dati della richiesta di ferie
+     * @return Un oggetto HolidayRequest o null se si verifica un errore
      */
     private static HolidayRequest createFromResultSet(ResultSet rs) throws SQLException {
         try {
@@ -202,10 +205,10 @@ public class HolidayRequest {
     }
 
     /**
-     * Carica i giorni richiesti per questa richiesta di ferie
+     * Carica i giorni richiesti per una richiesta di ferie dal database
      */
     private void loadRequestedDays() {
-        if (id == 0) return; // Not saved in database yet
+        if (id == 0) return; // Non ancora salvato nel database
 
         requestedDays.clear();
         String query = "SELECT requested_date FROM HolidayRequestDays WHERE request_id = ? ORDER BY requested_date";
@@ -215,20 +218,13 @@ public class HolidayRequest {
             public void handle(ResultSet rs) throws SQLException {
                 try {
                     String dateStr = rs.getString("requested_date");
-                    
                     if (dateStr != null && !dateStr.trim().isEmpty()) {
-                        try {
-                            Date requestedDate = Date.valueOf(dateStr.trim());
-                            requestedDays.add(requestedDate);
-                            LOGGER.fine("Successfully added date: " + requestedDate + " to request " + id);
-                        } catch (IllegalArgumentException e) {
-                            LOGGER.warning("Failed to parse date '" + dateStr + "' for holiday request " + id + ": " + e.getMessage());
-                        }
-                    } else {
-                        LOGGER.warning("Null or empty date string for holiday request " + id);
+                        LocalDate requestedDate = LocalDate.parse(dateStr.trim());
+                        requestedDays.add(requestedDate);
+                        LOGGER.fine("Loaded requested date: " + requestedDate + " for request " + id);
                     }
                 } catch (Exception e) {
-                    LOGGER.warning("Error processing requested date for holiday request " + id + ": " + e.getMessage());
+                    LOGGER.warning("Error parsing requested date for holiday request " + id + ": " + e.getMessage());
                 }
             }
         }, id);
@@ -320,8 +316,13 @@ public class HolidayRequest {
         // Poi inserisce i nuovi giorni
         if (!requestedDays.isEmpty()) {
             String insertQuery = "INSERT INTO HolidayRequestDays (request_id, requested_date) VALUES (?, ?)";
-            for (Date day : requestedDays) {
-                PersistenceManager.executeUpdate(insertQuery, id, day);
+            for (LocalDate day : requestedDays) {
+                if (day == null) {
+                    LOGGER.warning("Skipping null date for holiday request " + id);
+                    continue; // Skip null dates
+                }
+                String dateStr = day.toString();
+                PersistenceManager.executeUpdate(insertQuery, id, dateStr);
             }
         }
     }
