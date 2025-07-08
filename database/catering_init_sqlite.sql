@@ -261,11 +261,11 @@ INSERT INTO Staff (name, contact, address, fiscal_code, permanent, job_type, rem
 ('Chiara Rosa', '333-6789012', 'Via Torino 78, Milano', 'RSOCRL87A60F205U', 1, 'CHEF', 20),
 ('Giovanni Gialli', '333-7890123', 'Piazza Duomo 1, Milano', 'GLLGNN85B30F205T', 1, 'SERVICE', 12);
 
--- Insert Users CON I NOMI DI COLONNA CORRETTI
+-- Insert Users 
 INSERT INTO Users (username, staff_id) VALUES 
 ('Marco', 1), ('Giulia', 2), ('Luca', 3), ('Sofia', 4), ('Antonio', 5), ('Chiara', 6), ('Giovanni', 7), ('Francesca', NULL);
 
--- Assign roles to users CON ID CORRETTI
+-- Assign roles to users
 INSERT INTO UserRoles (user_id, role_id) VALUES
 (1, 3), (2, 3), (3, 0), (4, 0), (5, 1), (6, 1), (7, 2), (8, 2),
 (7, 3), (6, 2), (8, 4);

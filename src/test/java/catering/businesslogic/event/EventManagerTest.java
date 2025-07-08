@@ -58,8 +58,8 @@ public class EventManagerTest {
             assertEquals(organizer, app.getUserManager().getCurrentUser(), 
                 "Current user should be the organizer");
 
-            // Get existing staff from database (Mario Rossi - CHEF from sample data)
-            testStaff = Staff.loadByName("Mario Rossi");
+            // Get existing staff from database (Marco Rossi - CHEF from sample data)
+            testStaff = Staff.loadByName("Marco Rossi");
             assertNotNull(testStaff, "Mario Rossi should exist in database");
 
             // Set up existing event
