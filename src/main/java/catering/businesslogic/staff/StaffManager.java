@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.logging.Logger;
-import java.sql.Date;
+import java.time.LocalDate;
 
 import catering.businesslogic.CatERing;
 import catering.businesslogic.UseCaseLogicException;
@@ -58,9 +58,69 @@ public class StaffManager {
         // Crea un'istanza di Staff utilizzando la fabbrica
         Staff newStaff = StaffFactory.createStaff(jobType, permanent, name, address, contact, fiscalCode);
         
+        // Salva il nuovo staff nel database per ottenere l'ID
+        newStaff.saveNewStaff();
+        
+        // Verifica che il salvataggio sia riuscito
+        if (newStaff.getId() == 0) {
+            LOGGER.severe("Failed to save new staff member: " + name);
+            throw new UseCaseLogicException("Failed to save new staff member");
+        }
+        
+        // Crea un nuovo User associato al Staff
+        String username = generateRandomUsername(name, fiscalCode);
+        User newUser = new User(username);
+        
+        // Assegna il ruolo appropriato basato sul JobType
+        User.Role userRole = getUserRoleFromJobType(jobType);
+        newUser.addRole(userRole);
+        
+        // Collega l'User al Staff prima di salvarlo
+        newUser.setStaffId(newStaff.getId());
+        
+        // Salva l'utente nel database
+        if (!newUser.save()) {
+            LOGGER.severe("Failed to save new user for staff: " + name);
+            throw new UseCaseLogicException("Failed to save new user for staff");
+        }
+        
         notifyStaffHired(newStaff);
-        LOGGER.info("Successfully hired new staff: " + name);
+        LOGGER.info("Successfully hired new staff: " + name + " with user: " + username);
         return newStaff;
+    }
+
+    /**
+     * Genera un nome utente casuale per un nuovo membro dello staff, utilizzando il nome e il codice fiscale.
+     * 
+     * @param name Il nome del membro dello staff
+     * @param fiscalCode Il codice fiscale del membro dello staff
+     * @return Un nome utente generato casualmente
+     */
+    private String generateRandomUsername(String name, String fiscalCode) {
+        // Genera un nome utente casuale basato sul nome e sul codice fiscale
+        String baseUsername = name.toLowerCase().replaceAll("\\s+", "_") + "_" + fiscalCode.toLowerCase();
+        String randomSuffix = String.valueOf(System.currentTimeMillis() % 10000); // Aggiunge un suffisso casuale
+        return baseUsername + "_" + randomSuffix;
+    }
+
+    /**
+     * Converte un JobType in un User.Role appropriato.
+     * 
+     * @param jobType Il tipo di lavoro del personale
+     * @return Il ruolo utente corrispondente
+     * @throws IllegalArgumentException Se il JobType non è supportato
+     */
+    private User.Role getUserRoleFromJobType(JobType jobType) throws IllegalArgumentException {
+        switch (jobType) {
+            case COOK:
+                return User.Role.CUOCO;
+            case CHEF:
+                return User.Role.CHEF;
+            case SERVICE:
+                return User.Role.SERVIZIO;
+            default:
+                throw new IllegalArgumentException("Unsupported JobType: " + jobType);
+        }
     }
 
     /**
@@ -362,7 +422,7 @@ public class StaffManager {
      * @throws UseCaseLogicException Se l'utente non è autorizzato
      * @throws IllegalArgumentException Se i parametri sono nulli o non validi
      */
-    public HolidayRequest createHolidayRequest(Staff staff, Set<Date> dates, String description) throws UseCaseLogicException, IllegalArgumentException {
+    public HolidayRequest createHolidayRequest(Staff staff, Set<LocalDate> dates, String description) throws UseCaseLogicException, IllegalArgumentException {
         User user = CatERing.getInstance().getUserManager().getCurrentUser();
 
         if (staff == null) {

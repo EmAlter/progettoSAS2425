@@ -152,6 +152,7 @@ public class User {
             public void handle(ResultSet rs) throws SQLException {
                 load.id = rs.getInt("id");
                 load.username = rs.getString("username");
+                load.staffId = rs.getInt("staff_id"); //AGGIUNTO QUESTO
             }
         }, uid); // Pass uid as parameter
 
@@ -170,6 +171,7 @@ public class User {
             public void handle(ResultSet rs) throws SQLException {
                 u.id = rs.getInt("id");
                 u.username = rs.getString("username");
+                u.staffId = rs.getInt("staff_id"); //AGGIUNTO QUESTO
             }
         }, username); // Pass username as parameter
 
@@ -189,6 +191,7 @@ public class User {
                 User u = new User();
                 u.id = rs.getInt("id");
                 u.username = rs.getString("username");
+                u.staffId = rs.getInt("staff_id"); //AGGIUNTO QUESTO
 
                 // Load roles for this user
                 loadRolesForUser(u);
@@ -237,9 +240,9 @@ public class User {
         if (id != 0)
             return false; // Already exists
 
-        String query = "INSERT INTO Users (username) VALUES(?)";
+        String query = "INSERT INTO Users (username, staff_id) VALUES(?, ?)"; //AGGIUNTO: staff_id come parametro
 
-        PersistenceManager.executeUpdate(query, username);
+        PersistenceManager.executeUpdate(query, username, staffId); //AGGIUNTO: staffId come parametro
         id = PersistenceManager.getLastId();
 
         if (id > 0) {
@@ -259,9 +262,9 @@ public class User {
         if (id == 0)
             return false; // Not in DB
 
-        String query = "UPDATE Users SET username = ? WHERE id = ?";
+        String query = "UPDATE Users SET username = ?, staff_id = ? WHERE id = ?"; //AGGIUNTO: staffId come parametro
 
-        int rows = PersistenceManager.executeUpdate(query, username, id);
+        int rows = PersistenceManager.executeUpdate(query, username, staffId, id); //AGGIUNTO: staffId come parametro
 
         // Update user roles
         saveUserRoles();
@@ -306,29 +309,30 @@ public class User {
 
         // Then insert new roles
         for (Role role : roles) {
-            String roleId = getRoleStringId(role);
+            int roleId = getRoleIntId(role);
             String insertQuery = "INSERT INTO UserRoles (user_id, role_id) VALUES(?, ?)";
-            PersistenceManager.executeUpdate(insertQuery, id, roleId);
+            PersistenceManager.executeUpdate(insertQuery, id, roleId); 
         }
     }
 
     /**
-     * Converts Role enum to string ID for database
+     * Converts Role enum to integer ID for database 
+     * ***** PRIMA RITORNAVA CHAR *****
      */
-    private String getRoleStringId(Role role) {
+    private int getRoleIntId(Role role) {
         switch (role) {
             case CUOCO:
-                return "c";
+                return 0;
             case CHEF:
-                return "h";
+                return 1;
             case ORGANIZZATORE:
-                return "o";
+                return 2;
             case SERVIZIO:
-                return "s";
+                return 3;
             case PROPRIETARIO:
-                return "p";
+                return 4;
             default:
-                return "";
+                return -1; // Invalid role
         }
     }
 
