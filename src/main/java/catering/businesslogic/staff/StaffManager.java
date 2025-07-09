@@ -49,9 +49,9 @@ public class StaffManager {
      * @throws UseCaseLogicException Se l'utente non è proprietario
      */
     public Staff hireStaff(JobType jobType, boolean permanent, String name, String address, String contact, String fiscalCode) throws UseCaseLogicException {
-        User user = CatERing.getInstance().getUserManager().getCurrentUser();
         UserManager userManager = CatERing.getInstance().getUserManager();
-
+        User user = userManager.getCurrentUser();
+       
         if (!user.isOwner()) {
             LOGGER.warning("User " + user.getUserName() + " is not authorized to hire staff");
             throw new UseCaseLogicException("User is not authorized to hire staff");
