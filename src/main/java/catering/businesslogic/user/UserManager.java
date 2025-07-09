@@ -29,7 +29,7 @@ public class UserManager {
     }
 
     public User createUserForNewStaff(String name, JobType jobType, int staffId) {
-        User newUser = new User(name.split(" ")[0]);
+        User newUser = new User(name.split("\\s+")[0]);
         newUser.setStaffId(staffId);
     
         User.Role userRole = mapJobTypeToUserRole(jobType);
