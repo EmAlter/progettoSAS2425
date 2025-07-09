@@ -61,8 +61,7 @@ class StaffManagerTest {
             .orElse(null);
         
         assertNotNull(createdUser, "User should be created and linked to staff with ID " + newStaff.getId());
-        assertTrue(createdUser.getUserName().contains(name.toLowerCase().replaceAll("\\s+", "_")));
-        assertTrue(createdUser.getUserName().contains(fiscalCode.toLowerCase()));
+        assertEquals("Artoria", createdUser.getUserName()); // Username should be first name only
         assertTrue(createdUser.isCook()); // Should have CUOCO role for COOK job type
         assertEquals(newStaff.getId(), createdUser.getStaffId());
     }
