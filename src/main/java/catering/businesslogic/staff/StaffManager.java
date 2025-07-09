@@ -12,6 +12,7 @@ import catering.businesslogic.UseCaseLogicException;
 import catering.businesslogic.event.*;
 import catering.businesslogic.shift.*;
 import catering.businesslogic.user.User;
+import catering.businesslogic.user.UserManager;
 import catering.util.LogManager;
 
 public class StaffManager {
@@ -49,6 +50,7 @@ public class StaffManager {
      */
     public Staff hireStaff(JobType jobType, boolean permanent, String name, String address, String contact, String fiscalCode) throws UseCaseLogicException {
         User user = CatERing.getInstance().getUserManager().getCurrentUser();
+        UserManager userManager = CatERing.getInstance().getUserManager();
 
         if (!user.isOwner()) {
             LOGGER.warning("User " + user.getUserName() + " is not authorized to hire staff");
@@ -69,23 +71,24 @@ public class StaffManager {
         
         // Crea un nuovo User associato al Staff
         String username = generateRandomUsername(name, fiscalCode);
-        User newUser = new User(username);
+        User newUser = userManager.createUserForStaff(username, jobType, newStaff.getId());
         
         // Assegna il ruolo appropriato basato sul JobType
-        User.Role userRole = getUserRoleFromJobType(jobType);
-        newUser.addRole(userRole);
-        
+        User.Role userRole = userManager.mapJobTypeToUserRole(jobType);
+        userManager.addRoleToNewUser(userRole, newUser);
+
         // Collega l'User al Staff prima di salvarlo
-        newUser.setStaffId(newStaff.getId());
+        userManager.setStaffIdForCurrentUser(0, newUser); //QUI NON SO SE L'ID VA MESSO CASUALE
         
         // Salva l'utente nel database
-        if (!newUser.save()) {
+        /*if (!newUser.save()) {
             LOGGER.severe("Failed to save new user for staff: " + name);
             throw new UseCaseLogicException("Failed to save new user for staff");
         }
         
         notifyStaffHired(newStaff);
         LOGGER.info("Successfully hired new staff: " + name + " with user: " + username);
+        */
         return newStaff;
     }
 
@@ -101,26 +104,6 @@ public class StaffManager {
         String baseUsername = name.toLowerCase().replaceAll("\\s+", "_") + "_" + fiscalCode.toLowerCase();
         String randomSuffix = String.valueOf(System.currentTimeMillis() % 10000); // Aggiunge un suffisso casuale
         return baseUsername + "_" + randomSuffix;
-    }
-
-    /**
-     * Converte un JobType in un User.Role appropriato.
-     * 
-     * @param jobType Il tipo di lavoro del personale
-     * @return Il ruolo utente corrispondente
-     * @throws IllegalArgumentException Se il JobType non è supportato
-     */
-    private User.Role getUserRoleFromJobType(JobType jobType) throws IllegalArgumentException {
-        switch (jobType) {
-            case COOK:
-                return User.Role.CUOCO;
-            case CHEF:
-                return User.Role.CHEF;
-            case SERVICE:
-                return User.Role.SERVIZIO;
-            default:
-                throw new IllegalArgumentException("Unsupported JobType: " + jobType);
-        }
     }
 
     /**
