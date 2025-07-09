@@ -69,41 +69,11 @@ public class StaffManager {
             throw new UseCaseLogicException("Failed to save new staff member");
         }
         
-        // Crea un nuovo User associato al Staff
-        String username = generateRandomUsername(name, fiscalCode);
-        User newUser = userManager.createUserForStaff(username, jobType, newStaff.getId());
-        
-        // Assegna il ruolo appropriato basato sul JobType
-        User.Role userRole = userManager.mapJobTypeToUserRole(jobType);
-        userManager.addRoleToNewUser(userRole, newUser);
-
-        // Collega l'User al Staff prima di salvarlo
-        userManager.setStaffIdForNewUser(0, newUser); //QUI NON SO SE L'ID VA MESSO CASUALE
-        
-        // Salva l'utente nel database
-        /*if (!newUser.save()) {
-            LOGGER.severe("Failed to save new user for staff: " + name);
-            throw new UseCaseLogicException("Failed to save new user for staff");
-        }
-        
         notifyStaffHired(newStaff);
-        LOGGER.info("Successfully hired new staff: " + name + " with user: " + username);
-        */
-        return newStaff;
-    }
 
-    /**
-     * Genera un nome utente casuale per un nuovo membro dello staff, utilizzando il nome e il codice fiscale.
-     * 
-     * @param name Il nome del membro dello staff
-     * @param fiscalCode Il codice fiscale del membro dello staff
-     * @return Un nome utente generato casualmente
-     */
-    private String generateRandomUsername(String name, String fiscalCode) {
-        // Genera un nome utente casuale basato sul nome e sul codice fiscale
-        String baseUsername = name.toLowerCase().replaceAll("\\s+", "_") + "_" + fiscalCode.toLowerCase();
-        String randomSuffix = String.valueOf(System.currentTimeMillis() % 10000); // Aggiunge un suffisso casuale
-        return baseUsername + "_" + randomSuffix;
+        userManager.createUserForNewStaff(newStaff.getName(), newStaff.getJobType(), newStaff.getId());
+        LOGGER.info("Successfully hired new staff: " + name);
+        return newStaff;
     }
 
     /**

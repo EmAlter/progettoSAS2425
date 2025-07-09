@@ -28,11 +28,10 @@ public class UserManager {
         this.currentUser = user;
     }
 
-    public User createUserForStaff(String username, JobType jobType, int staffId) {
-        User newUser = new User(username);
+    public User createUserForNewStaff(String name, JobType jobType, int staffId) {
+        User newUser = new User(name.split(" ")[0]);
         newUser.setStaffId(staffId);
     
-        // Questa mappatura appartiene al dominio User
         User.Role userRole = mapJobTypeToUserRole(jobType);
         newUser.addRole(userRole);
     
@@ -45,27 +44,6 @@ public class UserManager {
             case CHEF: return User.Role.CHEF;
             case SERVICE: return User.Role.SERVIZIO;
             default: throw new IllegalArgumentException("Unsupported JobType: " + jobType);
-        }
-    }
-
-    public void addRoleToNewUser(User.Role role, User newUser) {
-        if (newUser != null) {
-            if(newUser.addRole(role)) {
-                LOGGER.info("Role " + role + " added to user: " + newUser.getUserName());
-            } else {
-                LOGGER.warning("Failed to add role " + role + " to user: " + newUser.getUserName());
-            }
-        } else {
-            LOGGER.warning("No current user set. Cannot add role: " + role);
-        }
-    }
-
-    public void setStaffIdForNewUser(int staffId, User newUser) {
-        if (newUser != null) {
-            newUser.setStaffId(staffId);
-            LOGGER.info("Staff ID " + staffId + " set for user: " + newUser.getUserName());
-        } else {
-            LOGGER.warning("No current user set. Cannot set staff ID.");
         }
     }
 }
