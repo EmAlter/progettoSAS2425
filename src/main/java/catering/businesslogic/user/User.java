@@ -383,4 +383,19 @@ public class User {
 
         return result;
     }
+
+    /**
+     * Controlla se un username esiste già nel database
+     * 
+     * @param username L'username da controllare
+     * @return true se esiste, false altrimenti
+     */
+    public static boolean usernameExists(String username) {
+        if (username == null || username.trim().isEmpty()) {
+            return false;
+        }
+        
+        User existingUser = User.load(username.trim());
+        return existingUser != null && existingUser.getId() > 0;
+    }
 }
