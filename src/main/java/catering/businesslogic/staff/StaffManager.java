@@ -57,19 +57,18 @@ public class StaffManager {
             throw new UseCaseLogicException("User is not authorized to hire staff");
         }
 
+        validateHireStaffInput(name, address, contact, fiscalCode);
+
         // Crea un'istanza di Staff utilizzando la fabbrica
         Staff newStaff = StaffFactory.createStaff(jobType, permanent, name, address, contact, fiscalCode);
         
-        // Salva il nuovo staff nel database per ottenere l'ID
-        newStaff.saveNewStaff();
-        
-        // Verifica che il salvataggio sia riuscito
+        notifyStaffHired(newStaff);
+
+         // Verifica che il salvataggio sia riuscito
         if (newStaff.getId() == 0) {
             LOGGER.severe("Failed to save new staff member: " + name);
             throw new UseCaseLogicException("Failed to save new staff member");
         }
-        
-        notifyStaffHired(newStaff);
 
         userManager.createUserForNewStaff(newStaff.getName(), newStaff.getJobType(), newStaff.getId());
         LOGGER.info("Successfully hired new staff: " + name);
@@ -363,6 +362,28 @@ public class StaffManager {
             throw new IllegalArgumentException("Insufficient holiday days available");
         }
 
+    }
+
+    /**
+     * Validazione dell'input per il metodo hireStaff.
+     * @param name
+     * @param address
+     * @param contact
+     * @param fiscalCode
+     */
+    private void validateHireStaffInput(String name, String address, String contact, String fiscalCode) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Name cannot be null or empty");
+        }
+        if (address == null || address.trim().isEmpty()) {
+            throw new IllegalArgumentException("Address cannot be null or empty");
+        }
+        if (contact == null || contact.trim().isEmpty()) {
+            throw new IllegalArgumentException("Contact cannot be null or empty");
+        }
+        if (fiscalCode == null || fiscalCode.trim().isEmpty()) {
+            throw new IllegalArgumentException("Fiscal code cannot be null or empty");
+        }
     }
 
     /**
