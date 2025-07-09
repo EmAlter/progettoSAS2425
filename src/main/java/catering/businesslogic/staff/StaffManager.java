@@ -78,7 +78,7 @@ public class StaffManager {
         userManager.addRoleToNewUser(userRole, newUser);
 
         // Collega l'User al Staff prima di salvarlo
-        userManager.setStaffIdForCurrentUser(0, newUser); //QUI NON SO SE L'ID VA MESSO CASUALE
+        userManager.setStaffIdForNewUser(0, newUser); //QUI NON SO SE L'ID VA MESSO CASUALE
         
         // Salva l'utente nel database
         /*if (!newUser.save()) {

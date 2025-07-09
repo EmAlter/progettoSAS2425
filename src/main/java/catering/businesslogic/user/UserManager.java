@@ -60,7 +60,7 @@ public class UserManager {
         }
     }
 
-    public void setStaffIdForCurrentUser(int staffId, User newUser) {
+    public void setStaffIdForNewUser(int staffId, User newUser) {
         if (newUser != null) {
             newUser.setStaffId(staffId);
             LOGGER.info("Staff ID " + staffId + " set for user: " + newUser.getUserName());
