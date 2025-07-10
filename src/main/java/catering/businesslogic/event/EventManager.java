@@ -66,6 +66,22 @@ public class EventManager {
     }
 
     /**
+     * Checks if an event already exists in the system based on its ID.
+     * 
+     * @param event The event to check
+     * @return true if the event exists, false otherwise
+     */
+    public boolean checkIfEventExists(Event event) {
+        ArrayList<Event> events = getEvents();
+        for (Event e : events) {
+            if (e.getId() == event.getId()) {
+                return true; // Event already exists
+            }
+        }
+        return false; // Event does not exist
+    }
+
+    /**
      * Sets the current service based on service ID
      * 
      * @param serviceId ID of the service to select

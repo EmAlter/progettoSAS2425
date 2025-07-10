@@ -86,7 +86,7 @@ public abstract class Staff {
         return fiscalCode;
     }
 
-    public int getRemainingDaysOff() {
+    public int getRemainingHolidays() {
         return remainingDaysOff;
     }
 
@@ -143,6 +143,17 @@ public abstract class Staff {
     }
 
     // ===== BUSINESS METHODS =====
+
+    public EvaluationNote createNewEvaluationNote(String description, int eventId) {
+        if (description == null || description.trim().isEmpty()) {
+            throw new IllegalArgumentException("Note cannot be null or empty");
+        }
+        EvaluationNote evaluationNote = new EvaluationNote(description.trim(), eventId);
+        this.evaluationNotes.add(evaluationNote); // Add the note to the staff's collection
+
+        return evaluationNote;
+    }
+
     public void reduceHolidays(int daysToReduce) {
         if (daysToReduce < 0) {
             throw new IllegalArgumentException("Days to reduce cannot be negative");
@@ -163,13 +174,6 @@ public abstract class Staff {
             }
             holidays.add(day);
         }
-    }
-
-    public void AddNote(EvaluationNote note) {
-        if (note == null) {
-            throw new IllegalArgumentException("Note cannot be null");
-        }
-        evaluationNotes.add(note);
     }
 
     public boolean isAvailable(Set<LocalDate> dates) {
