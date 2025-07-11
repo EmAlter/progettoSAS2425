@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import catering.businesslogic.CatERing;
 import catering.businesslogic.UseCaseLogicException;
 import catering.businesslogic.event.*;
+import catering.businesslogic.shift.Shift;
 import catering.businesslogic.user.User;
 import catering.businesslogic.user.UserManager;
 import catering.util.LogManager;
@@ -396,6 +397,21 @@ public class StaffManager {
         notifyHolidayRequestDeleted(request);
         
         LOGGER.info("Rejected holiday request for " + request.getRequester().getName());
+    }
+
+    /**
+     * Consulta il tabellone dei turni del personale.
+     * @throws UseCaseLogicException Se l'utente non è organizzatore o proprietario
+     * @return Una lista dei turni attualmente registrati
+     */
+    public List<Shift> consultShiftTable() throws UseCaseLogicException {
+        User user = CatERing.getInstance().getUserManager().getCurrentUser();
+        if (!user.isOrganizer() && !user.isOwner()) {
+            LOGGER.warning("User " + user.getUserName() + " is not authorized to consult shift table");
+            throw new UseCaseLogicException("User is not authorized to consult shift table");
+        }
+        
+        return CatERing.getInstance().getShiftManager().getShiftTable();
     }
 
 
