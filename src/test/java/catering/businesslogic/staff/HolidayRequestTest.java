@@ -79,6 +79,7 @@ public class HolidayRequestTest {
         }
     }
 
+    // Test per verificare la consultazione delle richieste di ferie esistenti nel database
     @Test
     @Order(1)
     void testConsultHolidayRequestsFromDatabase() {
@@ -116,6 +117,7 @@ public class HolidayRequestTest {
         }
     }
 
+    // Test per verificare specifiche richieste di ferie esistenti nel database
     @Test
     @Order(2)
     void testConsultSpecificHolidayRequests() {
@@ -166,6 +168,7 @@ public class HolidayRequestTest {
         }
     }
 
+    // Test per verificare la disponibilità delle ferie per diversi membri dello staff
     @Test
     @Order(3)
     void testCheckHolidayAvailability() {
@@ -193,6 +196,7 @@ public class HolidayRequestTest {
         }
     }
 
+    // Test per verificare l'accettazione di una richiesta di ferie
     @Test
     @Order(4)
     void testAcceptHolidayRequest() {
@@ -246,6 +250,7 @@ public class HolidayRequestTest {
         }
     }
 
+    // Test per verificare il rifiuto di una richiesta di ferie
     @Test
     @Order(5)
     void testRejectHolidayRequest() {
@@ -296,7 +301,7 @@ public class HolidayRequestTest {
             fail("Exception should not be thrown: " + e.getMessage());
         }
     }
-
+    // Test per verificare che uno staff regolare non possa consultare le richieste di ferie
     @Test
     @Order(6)
     void testUnauthorizedUserCannotConsultRequests() {
@@ -318,6 +323,7 @@ public class HolidayRequestTest {
         }
     }
 
+    // Test per verificare che uno staff regolare non possa accettare le richieste di ferie
     @Test
     @Order(7)
     void testUnauthorizedUserCannotAcceptRequests() {
@@ -356,6 +362,7 @@ public class HolidayRequestTest {
         }
     }
 
+    // Test per verificare che non sia possibile accettare una richiesta di ferie con giorni insufficienti
     @Test
     @Order(8)
     void testInsufficientHolidayDaysException() {
@@ -384,6 +391,7 @@ public class HolidayRequestTest {
         }
     }
 
+    // Test per verificare la consultazione delle note di valutazione
     @Test
     @Order(9)
     void testConsultEvaluationNotes() {
@@ -414,6 +422,7 @@ public class HolidayRequestTest {
         }
     }
 
+    // Test per verificare il flusso completo di richieste di ferie
     @Test
     @Order(10)
     void testCompleteHolidayRequestWorkflow() {

@@ -25,10 +25,7 @@ class StaffManagerTest {
         CatERing.getInstance().getUserManager().setCurrentUser(owner);
     }
 
-    /**
-     * Test per verificare che il metodo hireStaff crei correttamente un nuovo Staff e un User associato.
-     * @throws UseCaseLogicException
-     */
+    // Test per verificare che il metodo hireStaff crei correttamente un nuovo Staff e un User associato.
     @Test
     void testHireStaffCreatesUserAndStaff() throws UseCaseLogicException {
         // Arrange
@@ -66,10 +63,7 @@ class StaffManagerTest {
         assertEquals(newStaff.getId(), createdUser.getStaffId());
     }
 
-    /**
-     * Test per verificare che il metodo hireStaff gestisca correttamente diversi tipi di lavoro.
-     * @throws UseCaseLogicException
-     */
+    // Test per verificare che il metodo hireStaff gestisca correttamente diversi tipi di lavoro.
     @Test
     void testHireStaffWithDifferentJobTypes() throws UseCaseLogicException {
         // Test CHEF
@@ -91,10 +85,8 @@ class StaffManagerTest {
         assertTrue(serviceUser.isServiceStaff());
     }
 
-    /**
-     * Test per verificare che il metodo hireStaff lanci un'eccezione se l'utente corrente non è il proprietario.
-     * @throws UseCaseLogicException
-     */
+    
+    // Test per verificare che il metodo hireStaff lanci un'eccezione se l'utente corrente non è il proprietario.
     @Test
     void testHireStaffUnauthorizedThrowsException() {
         // Arrange - Set current user to non-owner

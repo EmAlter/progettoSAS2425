@@ -60,6 +60,7 @@ public class HireStaffTest {
         }
     }
 
+    //Test per verificare la corretta assunzione di un cuoco permanente.
     @Test
     @Order(1)
     void testHirePermanentCook() {
@@ -116,6 +117,7 @@ public class HireStaffTest {
         }
     }
 
+    //Test per verificare l'assunzione di un membro dello staff occasionale.
     @Test
     @Order(2)
     void testHireOccasionalServiceStaff() {
@@ -163,6 +165,7 @@ public class HireStaffTest {
         }
     }
 
+    //Test per verificare l'assunzione di uno chef permanente.
     @Test
     @Order(3)
     void testHirePermanentChef() {
@@ -204,6 +207,7 @@ public class HireStaffTest {
         }
     }
 
+    //Test per verificare che un organizzatore senza privilegi di proprietario non possa assumere.
     @Test
     @Order(4)
     void testUnauthorizedOrganizerCannotHire() {
@@ -232,6 +236,7 @@ public class HireStaffTest {
         }
     }
 
+    //Test per verificare che uno staff regolare non possa assumere.
     @Test
     @Order(5)
     void testUnauthorizedRegularStaffCannotHire() {
@@ -259,7 +264,8 @@ public class HireStaffTest {
             fail("Setup failed: " + e.getMessage());
         }
     }
-
+    //Test per verificare che i dati di input siano validi durante l'assunzione.
+    //Controlla che non siano accettati valori nulli o vuoti.
     @Test
     @Order(6)
     void testHireStaffWithInvalidData() {
@@ -336,6 +342,7 @@ public class HireStaffTest {
         }
     }
 
+    //Test per verificare l'assunzione di più membri dello staff di diversi tipi.
     @Test
     @Order(7)
     void testHireMultipleStaffOfDifferentTypes() {
