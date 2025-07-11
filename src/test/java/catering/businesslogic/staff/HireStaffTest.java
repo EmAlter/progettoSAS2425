@@ -91,7 +91,7 @@ public class HireStaffTest {
             assertEquals("NVOGSP85M01F205X", newCook.getFiscalCode(), "Fiscal code should match");
             assertEquals(JobType.COOK, newCook.getJobType(), "Job type should be COOK");
             assertTrue(newCook.isPermanent(), "Should be permanent");
-            assertEquals(30, newCook.getRemainingDaysOff(), "Should have default 30 days off");
+            assertEquals(30, newCook.getRemainingHolidays(), "Should have default 30 days off");
             assertTrue(newCook.getId() > 0, "Should have valid database ID");
 
             // Verify staff was added to the system
@@ -147,7 +147,7 @@ public class HireStaffTest {
             assertEquals("OCCMRA90F45F205Y", newServiceStaff.getFiscalCode(), "Fiscal code should match");
             assertEquals(JobType.SERVICE, newServiceStaff.getJobType(), "Job type should be SERVICE");
             assertFalse(newServiceStaff.isPermanent(), "Should be occasional (not permanent)");
-            assertEquals(30, newServiceStaff.getRemainingDaysOff(), "Should have default 30 days off");
+            assertEquals(30, newServiceStaff.getRemainingHolidays(), "Should have default 30 days off");
             assertTrue(newServiceStaff.getId() > 0, "Should have valid database ID");
 
             // Verify service staff count increased

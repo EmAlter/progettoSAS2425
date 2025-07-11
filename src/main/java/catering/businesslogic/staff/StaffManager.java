@@ -83,15 +83,15 @@ public class StaffManager {
      * @throws UseCaseLogicException Se l'utente non è organizzatore
      * @throws IllegalArgumentException Se i parametri sono nulli o non validi
      */
-    public void addNotes(String note, Event event, Staff staff) throws UseCaseLogicException, IllegalArgumentException {
+    public void addNotes(String description, Event event, Staff staff) throws UseCaseLogicException, IllegalArgumentException {
         User user = CatERing.getInstance().getUserManager().getCurrentUser();
         if (!user.isOrganizer()) {
             LOGGER.warning("User " + user.getUserName() + " is not authorized to add evaluation notes");
             throw new UseCaseLogicException("User is not authorized to add evaluation notes");
         }
 
-        if (note == null || note.trim().isEmpty()) {
-            throw new IllegalArgumentException("Note cannot be null or empty");
+        if (description == null || description.trim().isEmpty()) {
+            throw new IllegalArgumentException("Description cannot be null or empty");
         }
         if (event == null) {
             throw new IllegalArgumentException("Event cannot be null");
@@ -101,13 +101,17 @@ public class StaffManager {
         }
         
         // Verifica che lo staff esista nel database
-        Staff existingStaff = Staff.loadById(staff.getId());
-        if (existingStaff == null) {
+        if (Staff.loadById(staff.getId()) == null) {
             throw new IllegalArgumentException("Staff member not found in the system");
         }
-        
+
+        // Verifica che l'evento esista nel database
+        if(CatERing.getInstance().getEventManager().checkIfEventExists(event)) {
+            throw new IllegalArgumentException("Event not found in the system");
+        }
+
         // Creazione della nota di valutazione
-        EvaluationNote evaluationNote = new EvaluationNote(note.trim(), event.getId());
+        EvaluationNote evaluationNote = staff.createNewEvaluationNote(description, event.getId());
 
         notifyEvaluationNoteAdded(staff, evaluationNote);
         staff.addNote(evaluationNote);
@@ -120,7 +124,7 @@ public class StaffManager {
      * @param role Il ruolo da assegnare
      * @param staff Il membro dello staff
      */
-    public void assignRole(Role role, Staff staff) throws UseCaseLogicException {
+    public void assignToRole(Role role, Staff staff) throws UseCaseLogicException {
         User user = CatERing.getInstance().getUserManager().getCurrentUser();
 
         if (!user.isOrganizer() && !user.isOwner()) {
@@ -356,7 +360,6 @@ public class StaffManager {
             // 2. Aggiorna giorni e ferie
             staff.reduceHolidays(request.getNumberOfDays());
             staff.addHolidays(request.getRequestedDays());
-            
             // 3. Notifica le modifiche
             notifyStaffModified(staff);
             notifyHolidayRequestDeleted(request);
@@ -420,7 +423,7 @@ public class StaffManager {
             throw new IllegalArgumentException("Requester not found in the system");
         }
 
-        if (currentRequester.getRemainingDaysOff() < request.getNumberOfDays()) {
+        if (currentRequester.getRemainingHolidays() < request.getNumberOfDays()) {
             throw new IllegalArgumentException("Insufficient holiday days available");
         }
 

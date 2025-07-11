@@ -59,15 +59,15 @@ public class HolidayRequestTest {
             testCook = Staff.loadById(4);
             assertNotNull(testCook, "Test cook should be loaded");
             assertEquals(JobType.COOK, testCook.getJobType(), "Test cook should be of type COOK");
-            assertEquals(20, testCook.getRemainingDaysOff(), "Test cook should have 20 days available");
+            assertEquals(20, testCook.getRemainingHolidays(), "Test cook should have 20 days available");
 
             testServiceStaff = Staff.loadById(2);
             assertEquals(JobType.SERVICE, testServiceStaff.getJobType(), "Test service staff should be of type SERVICE");
-            assertEquals(10, testServiceStaff.getRemainingDaysOff(), "Test service staff should have 10 days available");
+            assertEquals(10, testServiceStaff.getRemainingHolidays(), "Test service staff should have 10 days available");
 
             testChef = Staff.loadById(5);
             assertEquals(JobType.CHEF, testChef.getJobType(), "Test chef should be of type CHEF");
-            assertEquals(5, testChef.getRemainingDaysOff(), "Test chef should have 5 days available");
+            assertEquals(5, testChef.getRemainingHolidays(), "Test chef should have 5 days available");
 
             // richieste di ferie già esistenti nel db
 
