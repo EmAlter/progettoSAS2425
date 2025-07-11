@@ -7,6 +7,7 @@ import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
 import java.time.LocalDate;
 import java.util.Set;
+import java.util.HashSet;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.Test;
 
 import catering.businesslogic.CatERing;
 import catering.businesslogic.UseCaseLogicException;
+import catering.businesslogic.shift.Shift;
 import catering.businesslogic.user.User;
 import catering.persistence.PersistenceManager;
 import catering.util.LogManager;
@@ -301,6 +303,7 @@ public class HolidayRequestTest {
             fail("Exception should not be thrown: " + e.getMessage());
         }
     }
+
     // Test per verificare che uno staff regolare non possa consultare le richieste di ferie
     @Test
     @Order(6)
@@ -391,10 +394,10 @@ public class HolidayRequestTest {
         }
     }
 
-    // Test per verificare la consultazione delle note di valutazione
+    // Test per verificare la consultazione della tabella dei turni
     @Test
     @Order(9)
-    void testConsultEvaluationNotes() {
+    void testConsultShiftTable() {
         LOGGER.info("Testing shift table consultation scenario");
 
         try {
@@ -402,20 +405,67 @@ public class HolidayRequestTest {
             app.getUserManager().fakeLogin(organizer.getUserName());
 
             // Consult shift table (part of the use case scenarios)
-            List<EvaluationNote> notes = app.getStaffManager().consultAllEvaluationNotes();
+            List<Shift> shifts = app.getStaffManager().consultShiftTable();
 
             // Verify we can access shift information
-            assertNotNull(notes, "notes should not be null");
+            assertNotNull(shifts, "Shift table should not be null");
+            assertTrue(shifts.size() >= 0, "Should be able to retrieve shift information");
 
-            LOGGER.info("Successfully consulted evaluation notes.");
+            LOGGER.info("Successfully consulted shift table: " + shifts.size() + " shifts found");
 
-            // Test with owner 
+            // Test with owner as well
             app.getUserManager().fakeLogin(owner.getUserName());
             
-            List<EvaluationNote> ownerShifts = app.getStaffManager().consultAllEvaluationNotes();
+            List<Shift> ownerShifts = app.getStaffManager().consultShiftTable();
             assertNotNull(ownerShifts, "Owner should also be able to consult shift table");
 
-            LOGGER.info("Owner can also consult evaluation notes.");
+            LOGGER.info("Owner can also consult shift table: " + ownerShifts.size() + " shifts found");
+
+        } catch (UseCaseLogicException e) {
+            fail("Exception should not be thrown: " + e.getMessage());
+        }
+    }
+
+    // Test per verificare la persistenza delle richieste di ferie
+    // (verifica che le richieste create vengano salvate correttamente nel database)
+    @Test
+    @Order(10)
+    void testHolidayRequestPersistence() {
+        LOGGER.info("Testing holiday request persistence");
+
+        try {
+            // Login as owner
+            app.getUserManager().fakeLogin(owner.getUserName());
+
+            // Create a new holiday request
+            Set<LocalDate> requestedDates = new HashSet<>();
+            requestedDates.add(LocalDate.of(2025, 12, 20));
+            requestedDates.add(LocalDate.of(2025, 12, 21));
+
+            HolidayRequest newRequest = app.getStaffManager().createHolidayRequest(
+                testServiceStaff, 
+                requestedDates, 
+                "Test persistence"
+            );
+
+            assertNotNull(newRequest, "Request should be created");
+            assertTrue(newRequest.getId() > 0, "Request should have valid ID");
+
+            // Reload request from database to verify persistence
+            HolidayRequest reloadedRequest = HolidayRequest.loadById(newRequest.getId());
+            assertNotNull(reloadedRequest, "Request should be retrievable from database");
+            assertEquals(newRequest.getDescription(), reloadedRequest.getDescription(), 
+                        "Descriptions should match after reload");
+            assertEquals(newRequest.getNumberOfDays(), reloadedRequest.getNumberOfDays(), 
+                        "Number of days should match after reload");
+            assertEquals(newRequest.getRequester().getId(), reloadedRequest.getRequester().getId(), 
+                        "Requester should match after reload");
+
+            // Verify requested dates persistence
+            assertEquals(newRequest.getRequestedDays(), reloadedRequest.getRequestedDays(), 
+                        "Requested dates should match after reload");
+
+            LOGGER.info("Successfully verified holiday request persistence");
 
         } catch (UseCaseLogicException e) {
             fail("Exception should not be thrown: " + e.getMessage());
@@ -424,22 +474,22 @@ public class HolidayRequestTest {
 
     // Test per verificare il flusso completo di richieste di ferie
     @Test
-    @Order(10)
+    @Order(11)
     void testCompleteHolidayRequestWorkflow() {
         LOGGER.info("Testing complete holiday request workflow");
 
         try {
-            // Step 1: Login as organizer to consult requests
+            // Login as organizer to consult requests
             app.getUserManager().fakeLogin(organizer.getUserName());
 
-            // Step 2: Consult all existing holiday requests
+            // Consult all existing holiday requests
             Set<HolidayRequest> allRequests = app.getStaffManager().consultHolidayRequests();
             assertNotNull(allRequests, "Should be able to consult holiday requests");
             
             int initialRequestCount = allRequests.size();
             LOGGER.info("Found " + initialRequestCount + " holiday requests to process");
 
-            // Step 3: Check availabilities for all test staff
+            // Check availabilities for all test staff
             int cookInitialAvailability = app.getStaffManager().getHolidaysAvailability(testCook);
             int serviceInitialAvailability = app.getStaffManager().getHolidaysAvailability(testServiceStaff);
             int chefInitialAvailability = app.getStaffManager().getHolidaysAvailability(testChef);
@@ -448,7 +498,7 @@ public class HolidayRequestTest {
             assertEquals(10, serviceInitialAvailability, "Service staff should start with 10 days");
             assertEquals(5, chefInitialAvailability, "Chef should start with 5 days");
 
-            // Step 4: Switch to owner to process requests
+            // Switch to owner to process requests
             app.getUserManager().fakeLogin(owner.getUserName());
 
             // Find specific requests to process
@@ -469,8 +519,6 @@ public class HolidayRequestTest {
             assertNotNull(cookRequest, "Should find cook's request");
             assertNotNull(serviceRequest, "Should find service staff's request");
             assertNotNull(chefRequest, "Should find chef's request");
-
-            // Step 5: Process requests with different outcomes
             
             // Accept cook's request (reasonable request)
             app.getStaffManager().acceptHolidayRequest(cookRequest);
@@ -490,8 +538,6 @@ public class HolidayRequestTest {
             }
             assertTrue(exceptionThrown, "Chef's excessive request should have thrown exception");
 
-            // Step 6: Verify final state
-
             // Cook's availability should be reduced
             int cookFinalAvailability = app.getStaffManager().getHolidaysAvailability(testCook);
             int expectedCookDays = cookInitialAvailability - cookRequest.getNumberOfDays();
@@ -508,7 +554,7 @@ public class HolidayRequestTest {
             assertEquals(chefInitialAvailability, chefFinalAvailability, 
                         "Chef should still have " + chefInitialAvailability + " days");
 
-            // Step 7: Verify holidays were added/not added correctly
+            // Verify holidays were added/not added correctly
             Staff finalCook = Staff.loadById(testCook.getId());
             Staff finalService = Staff.loadById(testServiceStaff.getId());
             Staff finalChef = Staff.loadById(testChef.getId());

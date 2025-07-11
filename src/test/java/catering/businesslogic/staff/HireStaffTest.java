@@ -6,6 +6,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -264,6 +265,7 @@ public class HireStaffTest {
             fail("Setup failed: " + e.getMessage());
         }
     }
+
     //Test per verificare che i dati di input siano validi durante l'assunzione.
     //Controlla che non siano accettati valori nulli o vuoti.
     @Test
@@ -416,6 +418,186 @@ public class HireStaffTest {
             assertFalse(service2.isPermanent(), "Service 2 should be occasional");
 
             LOGGER.info("Successfully hired 5 staff members: 2 cooks, 1 chef, 2 service staff");
+
+        } catch (UseCaseLogicException e) {
+            fail("Exception should not be thrown: " + e.getMessage());
+        }
+    }
+
+    // Test per verificare la consultazione delle note di valutazione per le decisioni di assunzione.
+    @Test
+    @Order(8)
+    void testConsultEvaluationNotes() {
+        LOGGER.info("Testing evaluation notes consultation for hiring decisions");
+
+        try {
+            // Login as owner 
+            app.getUserManager().fakeLogin(owner.getUserName());
+
+            // Step 2: Get occasional staff members who might be considered for permanent positions
+            ArrayList<Staff> occasionalStaff = app.getStaffManager().getStaffByPermanentStatus(false);
+            assertNotNull(occasionalStaff, "Should be able to retrieve occasional staff");
+            
+            LOGGER.info("Found " + occasionalStaff.size() + " occasional staff members");
+
+            // Consult all evaluation notes
+            List<EvaluationNote> allNotes = app.getStaffManager().consultAllEvaluationNotes();
+            assertNotNull(allNotes, "All evaluation notes should not be null");
+            
+            LOGGER.info("Total evaluation notes in system: " + allNotes.size());
+
+            // Focus on evaluation notes for occasional staff 
+            List<EvaluationNote> occasionalStaffNotes = app.getStaffManager().consultEvaluationNotesForOccasionalStaff();
+            assertNotNull(occasionalStaffNotes, "Occasional staff notes should not be null");
+            
+            LOGGER.info("Evaluation notes for occasional staff: " + occasionalStaffNotes.size());
+
+            // Examine individual occasional staff members for hiring consideration
+            for (Staff staff : occasionalStaff) {
+                LOGGER.info("Evaluating occasional staff member: " + staff.getName() + " (" + staff.getJobType() + ")");
+                
+                // Get specific evaluation notes for this staff member
+                List<EvaluationNote> staffNotes = app.getStaffManager().consultEvaluationNotesForStaff(staff);
+                assertNotNull(staffNotes, "Staff notes should not be null for " + staff.getName());
+                
+                LOGGER.info("  - Found " + staffNotes.size() + " evaluation notes for " + staff.getName());
+            }
+
+            // Verify authorization - test that organizer can also consult notes for hiring input
+            app.getUserManager().fakeLogin(organizer.getUserName());
+            
+            List<EvaluationNote> organizerConsultedNotes = app.getStaffManager().consultAllEvaluationNotes();
+            assertNotNull(organizerConsultedNotes, "Organizer should be able to consult evaluation notes");
+            assertEquals(allNotes.size(), organizerConsultedNotes.size(), 
+                        "Organizer should see same notes as owner");
+            
+            LOGGER.info("Organizer can also consult evaluation notes for hiring input");
+
+            // Verify comprehensive data integrity
+            for (EvaluationNote note : allNotes) {
+                assertNotNull(note.getNote(), "Note content should not be null");
+                assertFalse(note.getNote().trim().isEmpty(), "Note content should not be empty");
+                assertTrue(note.getEventId() > 0, "Note should have valid event ID");
+                assertNotNull(note.getCreatedDate(), "Note should have creation date");
+                assertTrue(note.getId() > 0, "Note should have valid database ID");
+            }
+
+            LOGGER.info("Successfully completed evaluation notes consultation for hiring decisions");
+            LOGGER.info("This information is crucial for making informed hiring decisions about occasional staff");
+
+        } catch (UseCaseLogicException e) {
+            fail("Exception should not be thrown: " + e.getMessage());
+        }
+    }
+
+    // Test per verificare la persistenza dei dati dopo l'assunzione di uno staff.
+    // Controlla che i dati siano correttamente salvati nel database e recuperabili
+    @Test
+    @Order(9)
+    void testHireStaffPersistenceVerification() {
+        LOGGER.info("Testing staff hiring persistence verification");
+
+        try {
+            // Login as owner
+            app.getUserManager().fakeLogin(owner.getUserName());
+
+            Staff newStaff = app.getStaffManager().hireStaff(
+                JobType.SERVICE, 
+                false, 
+                "Verifica Persistenza", 
+                "Via Database 999", 
+                "342-8888888", 
+                "VERPER92D55F205N"
+            );
+
+            assertNotNull(newStaff, "Staff should be created");
+            assertTrue(newStaff.getId() > 0, "Staff should have valid ID");
+
+            // Reload staff from database to verify persistence
+            Staff reloadedStaff = app.getStaffManager().findStaffById(newStaff.getId());
+            assertNotNull(reloadedStaff, "Staff should be retrievable from database");
+            assertEquals(newStaff.getName(), reloadedStaff.getName(), "Names should match after reload");
+            assertEquals(newStaff.getJobType(), reloadedStaff.getJobType(), "Job types should match after reload");
+            assertEquals(newStaff.isPermanent(), reloadedStaff.isPermanent(), "Permanent status should match after reload");
+            assertEquals(newStaff.getFiscalCode(), reloadedStaff.getFiscalCode(), "Fiscal codes should match after reload");
+
+            // Verify staff is in type-specific lists
+            ArrayList<Staff> serviceStaff = app.getStaffManager().getStaffByJobType(JobType.SERVICE);
+            assertTrue(serviceStaff.contains(reloadedStaff), "Staff should be in service staff list");
+
+            ArrayList<Staff> occasionalStaff = app.getStaffManager().getStaffByPermanentStatus(false);
+            assertTrue(occasionalStaff.contains(reloadedStaff), "Staff should be in occasional staff list");
+
+            LOGGER.info("Successfully verified staff persistence");
+
+        } catch (UseCaseLogicException e) {
+            fail("Exception should not be thrown: " + e.getMessage());
+        }
+    }
+
+    // Test per verificare un workflow completo di assunzione dello staff.
+    @Test
+    @Order(10)
+    void testCompleteHireStaffWorkflow() {
+        LOGGER.info("Testing complete hire staff workflow");
+
+        try {
+            // Login as owner
+            app.getUserManager().fakeLogin(owner.getUserName());
+
+            ArrayList<Staff> initialAllStaff = app.getStaffManager().getAllStaff();
+            ArrayList<Staff> initialPermanentStaff = app.getStaffManager().getStaffByPermanentStatus(true);
+            ArrayList<Staff> initialOccasionalStaff = app.getStaffManager().getStaffByPermanentStatus(false);
+
+            int initialTotal = initialAllStaff.size();
+            int initialPermanent = initialPermanentStaff.size();
+            int initialOccasional = initialOccasionalStaff.size();
+
+            // Hire diverse staff 
+            Staff permanentCook = app.getStaffManager().hireStaff(
+                JobType.COOK, true, "Alessandro Permanente", 
+                "Via Permanente 1", "343-1111111", "PERALE85M01F205M");
+
+            Staff occasionalService = app.getStaffManager().hireStaff(
+                JobType.SERVICE, false, "Federica Occasionale", 
+                "Via Occasionale 2", "343-2222222", "OCCFED90F45F205L");
+
+            Staff permanentChef = app.getStaffManager().hireStaff(
+                JobType.CHEF, true, "Stefano Capo", 
+                "Via Capo 3", "343-3333333", "CAPSTE88L20F205K");
+
+            // Verify all staff were created successfully
+            assertNotNull(permanentCook, "Permanent cook should be created");
+            assertNotNull(occasionalService, "Occasional service staff should be created");
+            assertNotNull(permanentChef, "Permanent chef should be created");
+
+            // Verify final counts
+            ArrayList<Staff> finalAllStaff = app.getStaffManager().getAllStaff();
+            ArrayList<Staff> finalPermanentStaff = app.getStaffManager().getStaffByPermanentStatus(true);
+            ArrayList<Staff> finalOccasionalStaff = app.getStaffManager().getStaffByPermanentStatus(false);
+
+            assertEquals(initialTotal + 3, finalAllStaff.size(), "Total should increase by 3");
+            assertEquals(initialPermanent + 2, finalPermanentStaff.size(), "Permanent should increase by 2");
+            assertEquals(initialOccasional + 1, finalOccasionalStaff.size(), "Occasional should increase by 1");
+
+            // Verify staff are retrievable through various methods
+            assertEquals(permanentCook, app.getStaffManager().findStaffByName("Alessandro Permanente"));
+            assertEquals(occasionalService, app.getStaffManager().findStaffByFiscalCode("OCCFED90F45F205L"));
+            assertEquals(permanentChef, app.getStaffManager().findStaffById(permanentChef.getId()));
+
+            // Verify staff attributes are correct
+            assertTrue(permanentCook.isPermanent(), "Cook should be permanent");
+            assertEquals(JobType.COOK, permanentCook.getJobType(), "Should be COOK type");
+            assertEquals(30, permanentCook.getRemainingHolidays(), "Should have 30 holiday days");
+
+            assertFalse(occasionalService.isPermanent(), "Service staff should be occasional");
+            assertEquals(JobType.SERVICE, occasionalService.getJobType(), "Should be SERVICE type");
+
+            assertTrue(permanentChef.isPermanent(), "Chef should be permanent");
+            assertEquals(JobType.CHEF, permanentChef.getJobType(), "Should be CHEF type");
+
+            LOGGER.info("Successfully completed comprehensive hire staff workflow");
+            LOGGER.info("Hired 3 staff members: 1 permanent cook, 1 occasional service, 1 permanent chef");
 
         } catch (UseCaseLogicException e) {
             fail("Exception should not be thrown: " + e.getMessage());

@@ -259,16 +259,17 @@ INSERT INTO Staff (name, contact, address, fiscal_code, permanent, job_type, rem
 ('Sofia Neri', '333-4567890', 'Via Montenapoleone 12, Milano', 'NRIFRN92D55F205W', 1, 'COOK', 20),
 ('Antonio Blu', '333-5678901', 'Via Brera 34, Milano', 'BLUALS89L20F205V', 0, 'CHEF', 5),
 ('Chiara Rosa', '333-6789012', 'Via Torino 78, Milano', 'RSOCRL87A60F205U', 1, 'CHEF', 20),
-('Giovanni Gialli', '333-7890123', 'Piazza Duomo 1, Milano', 'GLLGNN85B30F205T', 1, 'SERVICE', 12);
+('Giovanni Gialli', '333-7890123', 'Piazza Duomo 1, Milano', 'GLLGNN85B30F205T', 1, 'SERVICE', 12),
+('Francesca Viola', '333-8901234', 'Via della Spiga 89, Milano', 'VLFNCS91C40F205S', 1, 'COOK', 30);
 
 -- Insert Users 
 INSERT INTO Users (username, staff_id) VALUES 
-('Marco', 1), ('Giulia', 2), ('Luca', 3), ('Sofia', 4), ('Antonio', 5), ('Chiara', 6), ('Giovanni', 7), ('Francesca', NULL);
+('Marco', 1), ('Giulia', 2), ('Luca', 3), ('Sofia', 4), ('Antonio', 5), ('Chiara', 6), ('Giovanni', 7), ('Francesca', NULL), ('FrancescaV', 8);
 
 -- Assign roles to users
 INSERT INTO UserRoles (user_id, role_id) VALUES
 (1, 3), (2, 3), (3, 0), (4, 0), (5, 1), (6, 1), (7, 2), (8, 2),
-(7, 3), (6, 2), (8, 4);
+(7, 3), (6, 2), (8, 4), (9, 0);
 
 -- Insert Preparations
 INSERT INTO Preparations (name, description) VALUES
@@ -402,12 +403,13 @@ INSERT INTO EventStaffSheets (id, note) VALUES
 -- Insert roles for the event
 INSERT INTO EventRoles (event_id, description, job_type, staff_id) VALUES 
 (1, 'Chef responsabile', 'CHEF', 5),
-(1, 'Sous Chef', 'CHEF', 6),
+(1, 'Sous Chef', 'CHEF', NULL),
 (1, 'Cuoco principale antipasti', 'COOK', 3),
 (1, 'Cuoco principale primi', 'COOK', 4),
-(1, 'Responsabile sala', 'SERVICE', 1),
+(1, 'Responsabile sala', 'SERVICE', NULL),
 (1, 'Cameriere sala principale', 'SERVICE', 2),
-(1, 'Addetto bar', 'SERVICE', 7);
+(1, 'Addetto bar', 'SERVICE', 7),
+(1, 'Cuoco preparazione antipasti', 'COOK', NULL);
 
 -- Insert sample holiday requests
 INSERT INTO HolidayRequests (staff_id, description) VALUES 
