@@ -24,7 +24,7 @@ public class EvaluationNote {
         this.createdDate = new Timestamp(System.currentTimeMillis());
     }
 
-    // Constructor for loading from DB
+    // Costructore per la persistenza
     private EvaluationNote() {
     }
 
@@ -153,7 +153,7 @@ public class EvaluationNote {
     }
 
     /**
-     * Helper method per creare una EvaluationNote dal ResultSet
+     * Metodo di utilità per creare un'istanza di EvaluationNote da un ResultSet
      */
     private static EvaluationNote createFromResultSet(ResultSet rs) throws SQLException {
         try {
@@ -175,7 +175,7 @@ public class EvaluationNote {
      */
     public void saveNewEvaluationNote(int staffId) {
         if (id != 0) {
-            return; // Already exists in database
+            return; // Esiste già nel database
         }
 
         String query = "INSERT INTO EvaluationNotes (staff_id, event_id, note, created_date) VALUES (?, ?, ?, ?)";
@@ -191,7 +191,7 @@ public class EvaluationNote {
 
     public void updateEvaluationNote() {
         if (id == 0) {
-            return; // Not saved in database yet
+            return; // Non ancora salvata nel database
         }
 
         String query = "UPDATE EvaluationNotes SET note = ? WHERE id = ?";
@@ -206,7 +206,7 @@ public class EvaluationNote {
      */
     public boolean deleteEvaluationNote() {
         if (id == 0) {
-            return false; // Not saved in database yet
+            return false; // Non ancora salvata nel database
         }
 
         String query = "DELETE FROM EvaluationNotes WHERE id = ?";

@@ -143,7 +143,14 @@ public abstract class Staff {
     }
 
     // ===== BUSINESS METHODS =====
-
+    
+    /**
+     * Crea una nuova nota di valutazione per questo membro del personale.
+     * @param description La descrizione della nota di valutazione.
+     * @param eventId L'ID dell'evento associato alla nota.
+     * @throws IllegalArgumentException Se la descrizione è null o vuota.
+     * @return
+     */
     public EvaluationNote createNewEvaluationNote(String description, int eventId) {
         if (description == null || description.trim().isEmpty()) {
             throw new IllegalArgumentException("Note cannot be null or empty");
@@ -154,6 +161,11 @@ public abstract class Staff {
         return evaluationNote;
     }
 
+    /**
+     * Riduce i giorni di ferie rimanenti.
+     * @param daysToReduce Il numero di giorni da ridurre.
+     * @throws IllegalArgumentException Se i giorni da ridurre sono negativi o maggiori dei giorni rimanenti.
+     */
     public void reduceHolidays(int daysToReduce) {
         if (daysToReduce < 0) {
             throw new IllegalArgumentException("Days to reduce cannot be negative");
@@ -164,6 +176,11 @@ public abstract class Staff {
         this.remainingDaysOff -= daysToReduce;
     }
 
+    /**
+     * Aggiunge giorni di ferie a questo membro del personale.
+     * @param days I giorni da aggiungere come ferie.
+     * @throws IllegalArgumentException Se i giorni sono nulli o vuoti.
+     */
     public void addHolidays(Set<LocalDate> days) {
         if (days == null || days.isEmpty()) {
             throw new IllegalArgumentException("Holidays cannot be null or empty");
@@ -176,6 +193,11 @@ public abstract class Staff {
         }
     }
 
+    /**
+     * Aggiunge una nota di valutazione a questo membro del personale.
+     * @param note La nota di valutazione da aggiungere.
+     * @throws IllegalArgumentException Se la nota è null.
+     */
     public void addNote(EvaluationNote note) {
         if (note == null) {
             throw new IllegalArgumentException("Note cannot be null");
@@ -343,7 +365,7 @@ public abstract class Staff {
     }
 
     /**
-     * Helper method per caricare il personale tramite query
+     * Metodo di utilità per caricare un membro del personale tramite una query generica
      */
     private static Staff loadStaffByQuery(String query, Object param) {
         final Staff[] staffHolder = new Staff[1];

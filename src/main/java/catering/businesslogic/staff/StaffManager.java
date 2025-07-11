@@ -69,6 +69,7 @@ public class StaffManager {
             throw new UseCaseLogicException("Failed to save new staff member");
         }
 
+        // Crea un utente per il nuovo membro dello staff
         userManager.createUserForNewStaff(newStaff.getName(), newStaff.getJobType(), newStaff.getId());
         LOGGER.info("Successfully hired new staff: " + name);
         return newStaff;

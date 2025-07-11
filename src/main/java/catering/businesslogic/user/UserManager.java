@@ -100,6 +100,12 @@ public class UserManager {
         return null;
     }
 
+    /**
+     * Ritorna il ruolo utente corrispondente al tipo di lavoro
+     * 
+     * @param jobType Il tipo di lavoro
+     * @return Il ruolo utente corrispondente
+     */
     public User.Role mapJobTypeToUserRole(JobType jobType) {
         switch (jobType) {
             case COOK: return User.Role.CUOCO;

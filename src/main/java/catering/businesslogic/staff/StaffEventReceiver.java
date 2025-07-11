@@ -1,45 +1,45 @@
 package catering.businesslogic.staff;
 
 /**
- * Interface for receiving staff-related event notifications.
- * Implements the Observer pattern for staff management operations.
- * Classes that implement this interface will be notified when staff-related
- * events occur in the system.
+ * Interfaccia per ricevere notifiche sugli eventi relativi allo staff.
+ * Implementa il pattern Observer per le operazioni di gestione dello staff.
+ * Le classi che implementano questa interfaccia saranno notificate quando
+ * si verificano eventi relativi allo staff nel sistema.
  */
 public interface StaffEventReceiver {
     /**
-     * Called when new staff is hired into the system
+     * Chiamato quando un membro dello staff viene assunto
      * 
-     * @param s The staff member that was hired
+     * @param staff Il membro dello staff che è stato assunto
      */
     void updateStaffHired(Staff staff);
 
     /**
-     * Called when staff data is modified
+     * Chiamato quando i dati di un membro dello staff vengono modificati
      * 
-     * @param s The staff member whose data was modified
+     * @param staff Il membro dello staff i cui dati sono stati modificati
      */
     void updateStaffModified(Staff staff);
 
     /**
-     * Called when a holiday request is deleted from the system
+     * Chiamato quando una richiesta di ferie viene eliminata dal sistema
      * 
-     * @param request The holiday request that was deleted
+     * @param request La richiesta di ferie che è stata eliminata
      */
     void updateHolidayRequestDeleted(HolidayRequest request);
 
     /**
-     * Called when a note is added to a staff member's evaluation notes
+     * Chiamato quando una nota viene aggiunta alle note di valutazione di un membro dello staff
      * 
-     * @param staff The staff member whose evaluation notes were modified
-     * @param note The evaluation note that was added
+     * @param staff Il membro dello staff le cui note di valutazione sono state modificate
+     * @param note La nota di valutazione che è stata aggiunta
      */
     void updateEvaluationNoteAdded(Staff staff, EvaluationNote note);
 
     /**
-     * Called when a holiday request is created
+     * Chiamato quando una richiesta di ferie viene creata
      * 
-     * @param request The holiday request that was created
+     * @param request La richiesta di ferie che è stata creata
      */
     void updateHolidayRequestCreated(HolidayRequest request);
 }
