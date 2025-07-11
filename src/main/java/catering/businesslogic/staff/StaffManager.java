@@ -327,7 +327,7 @@ public class StaffManager {
             throw new IllegalArgumentException("Staff member not found in the system");
         }
 
-        return currentStaff.getRemainingDaysOff();
+        return currentStaff.getRemainingHolidays();
     }
 
     /**
