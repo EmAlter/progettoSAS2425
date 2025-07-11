@@ -120,8 +120,8 @@ public class StaffManager {
     }
 
     /**
-     * Assegna un ruolo a un membro dello staff. (Delega la responsabilità all'EventManager)
-     * @param role Il ruolo da assegnare
+     * Assegna un membro dello staff a un ruolo. (Delega la responsabilità all'EventManager)
+     * @param role Il ruolo a cui assegnare lo staff
      * @param staff Il membro dello staff
      */
     public void assignToRole(Role role, Staff staff) throws UseCaseLogicException {
