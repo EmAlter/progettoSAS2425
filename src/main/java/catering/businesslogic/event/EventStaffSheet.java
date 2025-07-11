@@ -87,6 +87,7 @@ public class EventStaffSheet {
     /**
      * Assegna uno staff a un ruolo specifico.
      * Se il ruolo è già assegnato, viene registrato un avviso e l'assegnazione non viene effettuata.
+     * Se lo staff è già assegnato a un altro ruolo, viene registrato un avviso e l'assegnazione non viene effettuata.
      * 
      * @param r il ruolo a cui assegnare lo staff
      * @param s lo staff da assegnare al ruolo
@@ -95,6 +96,10 @@ public class EventStaffSheet {
         if (r != null && s != null) {
             if (r.isAssigned()) {
                 LOGGER.warning("Role " + r.getDescription() + " is already assigned.");
+                return;
+            }
+            if (assignments.stream().anyMatch(role -> role.getAssignedStaff() != null && role.getAssignedStaff().equals(s))) {
+                LOGGER.warning("Staff " + s.getName() + " is already assigned to another role.");
                 return;
             }
             r.setStaff(s);

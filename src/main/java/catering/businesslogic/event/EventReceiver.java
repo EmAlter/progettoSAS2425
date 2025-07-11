@@ -1,7 +1,6 @@
 package catering.businesslogic.event;
 
 import catering.businesslogic.menu.Menu;
-import catering.businesslogic.staff.Staff;
 
 /**
  * Interface for receiving event-related notifications.
@@ -33,9 +32,9 @@ public interface EventReceiver {
 
     void updateRoleCreated(EventStaffSheet sheet, Role role);
     
-    void updateRoleAssigned(EventStaffSheet sheet, Role role, Staff staff);
+    void updateRoleAssigned(EventStaffSheet sheet, Role role);
 
-    void updateRoleUnassigned(EventStaffSheet sheet, Role role, Staff previousStaff);
+    void updateRoleUnassigned(EventStaffSheet sheet, Role role);
 
     void updateRoleRemoved(EventStaffSheet sheet, Role role);
 }

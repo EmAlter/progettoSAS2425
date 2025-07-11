@@ -226,7 +226,7 @@ public class EventManager {
 
         sheet.assignStaffToRole(r, s);
         
-        notifyRoleAssigned(sheet, r, s);
+        notifyRoleAssigned(sheet, r);
     }
     
     /**
@@ -266,7 +266,7 @@ public class EventManager {
         // Rimuove l'assegnazione
         sheet.removeAssignment(r);
 
-        notifyRoleUnassigned(sheet, r, previousStaff);
+        notifyRoleUnassigned(sheet, r);
     }
 
     /**
@@ -629,33 +629,22 @@ public class EventManager {
         }
     }
 
-    // private void notifyEventStaffSheetDeleted(EventStaffSheet sheet) {
-    //     for (EventReceiver receiver : eventReceivers) {
-    //         receiver.updateEventStaffSheetDeleted(sheet);
-    //     }
-    // }
-
     private void notifyRoleCreated(EventStaffSheet sheet, Role role) {
         for (EventReceiver receiver : eventReceivers) {
             receiver.updateRoleCreated(sheet, role);
         }   
     }
 
-    private void notifyRoleAssigned(EventStaffSheet sheet, Role role, Staff staff) {
+    private void notifyRoleAssigned(EventStaffSheet sheet, Role role) {
         for (EventReceiver receiver : eventReceivers) {
-            receiver.updateRoleAssigned(sheet, role, staff);
+            receiver.updateRoleAssigned(sheet, role);
         }
     }
 
-    private void notifyRoleUnassigned(EventStaffSheet sheet, Role role, Staff previousStaff) {
+    private void notifyRoleUnassigned(EventStaffSheet sheet, Role role) {
         for (EventReceiver receiver : eventReceivers) {
-            receiver.updateRoleUnassigned(sheet, role, previousStaff);
+            receiver.updateRoleUnassigned(sheet, role);
         }
     }
 
-    // private void notifyRoleRemoved(EventStaffSheet sheet, Role role) {
-    //     for (EventReceiver receiver : eventReceivers) {
-    //         receiver.updateRoleRemoved(sheet, role);
-    //     }
-    // }
 }

@@ -165,13 +165,19 @@ public abstract class Staff {
         }
     }
 
-    public void AddNote(EvaluationNote note) {
+    public void addNote(EvaluationNote note) {
         if (note == null) {
             throw new IllegalArgumentException("Note cannot be null");
         }
         evaluationNotes.add(note);
     }
 
+    /**
+     * Verifica se il personale è disponibile in base alle date specificate.
+     * @param dates Le date da verificare per la disponibilità del personale.
+     * @throws IllegalArgumentException Se le date sono nulle o vuote.
+     * @return true se il personale è disponibile, false se ha ferie in quelle date.
+     */
     public boolean isAvailable(Set<LocalDate> dates) {
         if (dates == null || dates.isEmpty()) {
             throw new IllegalArgumentException("Dates cannot be null or empty");
@@ -286,6 +292,35 @@ public abstract class Staff {
                 }
             }
         }, jobType.toString());
+
+        // Carica le ferie per ogni membro del personale
+        for (Staff staff : staffList) {
+            staff.loadHolidays();
+            staff.loadEvaluationNotes();
+        }
+
+        return staffList;
+    }
+
+    /**
+     * Carica il personale per status permanente/occasionale
+     * 
+     * @param permanent true per permanenti, false per occasionali
+     * @return Lista del personale con lo status specificato
+     */
+    public static ArrayList<Staff> loadByPermanentStatus(boolean permanent) {
+        ArrayList<Staff> staffList = new ArrayList<>();
+        String query = "SELECT * FROM Staff WHERE permanent = ? ORDER BY name";
+
+        PersistenceManager.executeQuery(query, new ResultHandler() {
+            @Override
+            public void handle(ResultSet rs) throws SQLException {
+                Staff staff = createStaffFromResultSet(rs);
+                if (staff != null) {
+                    staffList.add(staff);
+                }
+            }
+        }, permanent ? 1 : 0);
 
         // Carica le ferie per ogni membro del personale
         for (Staff staff : staffList) {

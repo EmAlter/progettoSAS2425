@@ -6,7 +6,6 @@ import catering.businesslogic.event.EventStaffSheet;
 import catering.businesslogic.event.Role;
 import catering.businesslogic.event.Service;
 import catering.businesslogic.menu.Menu;
-import catering.businesslogic.staff.Staff;
 
 /**
  * Persistence class for Event operations.
@@ -74,12 +73,12 @@ public class EventPersistence implements EventReceiver {
     }
     
     @Override
-    public void updateRoleAssigned(EventStaffSheet sheet, Role role, Staff staff) {
+    public void updateRoleAssigned(EventStaffSheet sheet, Role role) {
         sheet.updateRoleAssignment(role);
     }
 
     @Override
-    public void updateRoleUnassigned(EventStaffSheet sheet, Role role, Staff previousStaff) {
+    public void updateRoleUnassigned(EventStaffSheet sheet, Role role) {
         sheet.updateRoleUnassignment(role);
     }
 

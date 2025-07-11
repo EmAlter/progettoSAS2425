@@ -10,7 +10,6 @@ import java.time.LocalDate;
 import catering.businesslogic.CatERing;
 import catering.businesslogic.UseCaseLogicException;
 import catering.businesslogic.event.*;
-import catering.businesslogic.shift.*;
 import catering.businesslogic.user.User;
 import catering.businesslogic.user.UserManager;
 import catering.util.LogManager;
@@ -111,7 +110,7 @@ public class StaffManager {
         EvaluationNote evaluationNote = new EvaluationNote(note.trim(), event.getId());
 
         notifyEvaluationNoteAdded(staff, evaluationNote);
-        staff.AddNote(evaluationNote);
+        staff.addNote(evaluationNote);
         
         LOGGER.info("Added evaluation note for staff " + staff.getName() + " for event " + event.getName());
     }
@@ -150,18 +149,96 @@ public class StaffManager {
     }
 
     /**
-     * Consulta gli eventi storici registrati nel sistema. (delega la responsabilità all'EventManager)
-     * @return Una lista di EventStaffSheet che rappresentano gli eventi storici
-     * @throws UseCaseLogicException
+     * Consulta una lista di tutte le note di valutazione dei dipendenti.
+     * @return Una lista di EvaluationNote che rappresentano le note di valutazione
+     * @throws UseCaseLogicException se l'utente non è autorizzato
      */
-    public List<EventStaffSheet> consultHistoricalEvents() throws UseCaseLogicException {
+    public List<EvaluationNote> consultAllEvaluationNotes() throws UseCaseLogicException {
         User user = CatERing.getInstance().getUserManager().getCurrentUser();
         if (!user.isOrganizer() && !user.isOwner()) {
-            LOGGER.warning("User " + user.getUserName() + " is not authorized to consult historical events");
-            throw new UseCaseLogicException("User is not authorized to consult historical events");
+            LOGGER.warning("User " + user.getUserName() + " is not authorized to consult all the evaluation notes");
+            throw new UseCaseLogicException("User is not authorized to consult all the evaluation notes");
         }
 
-        return CatERing.getInstance().getEventManager().getAllEventSheets();
+        // Carica dal database
+        List<EvaluationNote> notes = EvaluationNote.loadAllEvaluationNotes();
+        return new ArrayList<>(notes);
+    }
+
+    /**
+     * Consulta una lista di tutte le note di valutazione di un membro dello staff specifico.
+     * @param staff Il membro dello staff di cui consultare le note
+     * @return Una lista di EvaluationNote che rappresentano le note di valutazione
+     * @throws UseCaseLogicException se l'utente non è autorizzato
+     * @throws IllegalArgumentException Se lo staff è null o non esiste nel sistema
+     */
+    public List<EvaluationNote> consultEvaluationNotesForStaff(Staff staff) throws UseCaseLogicException {
+        User user = CatERing.getInstance().getUserManager().getCurrentUser();
+        if (!user.isOrganizer() && !user.isOwner()) {
+            LOGGER.warning("User " + user.getUserName() + " is not authorized to consult all the evaluation notes");
+            throw new UseCaseLogicException("User is not authorized to consult all the evaluation notes");
+        }
+
+        if (staff == null) {
+            throw new IllegalArgumentException("Staff cannot be null");
+        }
+
+        Staff existingStaff = Staff.loadById(staff.getId());
+        if (existingStaff == null) {
+            throw new IllegalArgumentException("Staff member not found in the system");
+        }
+
+        // Carica dal database
+        List<EvaluationNote> notes = EvaluationNote.loadByStaffId(staff.getId());
+        return new ArrayList<>(notes);
+    }
+
+    /**
+     * Consulta le note di valutazione per un evento specifico.
+     * 
+     * @param event L'evento di cui consultare le note
+     * @return Lista delle note di valutazione per l'evento specificato
+     * @throws UseCaseLogicException Se l'utente non è autorizzato
+     * @throws IllegalArgumentException Se l'evento è null
+     */
+    public List<EvaluationNote> consultEvaluationNotesForEvent(Event event) throws UseCaseLogicException, IllegalArgumentException {
+        User user = CatERing.getInstance().getUserManager().getCurrentUser();
+        if (!user.isOrganizer() && !user.isOwner()) {
+            LOGGER.warning("User " + user.getUserName() + " is not authorized to consult evaluation notes");
+            throw new UseCaseLogicException("User is not authorized to consult evaluation notes");
+        }
+
+        if (event == null) {
+            throw new IllegalArgumentException("Event cannot be null");
+        }
+
+        List<EvaluationNote> eventNotes = EvaluationNote.loadByEventId(event.getId());
+        return eventNotes;
+    }
+
+    /**
+    * Consulta le note di valutazione solo per i dipendenti occasionali.
+    * Accessibile solo a organizzatori e proprietari.
+    * 
+    * @return Lista delle note di valutazione per i dipendenti occasionali
+    * @throws UseCaseLogicException Se l'utente non è autorizzato
+    */
+    public List<EvaluationNote> consultEvaluationNotesForOccasionalStaff() throws UseCaseLogicException {
+        User user = CatERing.getInstance().getUserManager().getCurrentUser();
+        if (!user.isOrganizer() && !user.isOwner()) {
+            LOGGER.warning("User " + user.getUserName() + " is not authorized to consult evaluation notes");
+            throw new UseCaseLogicException("User is not authorized to consult evaluation notes");
+        }
+
+        List<Staff> occasionalStaff = Staff.loadByPermanentStatus(false);
+
+        List<EvaluationNote> occasionalNotes = new ArrayList<>();
+        for (Staff staff : occasionalStaff) {
+            List<EvaluationNote> staffNotes = EvaluationNote.loadByStaffId(staff.getId());
+            occasionalNotes.addAll(staffNotes);
+        }
+
+        return occasionalNotes;
     }
 
     /**
@@ -247,21 +324,6 @@ public class StaffManager {
         }
 
         return currentStaff.getRemainingDaysOff();
-    }
-
-    /**
-     * Consulta il tabellone dei turni del personale.
-     * @throws UseCaseLogicException Se l'utente non è organizzatore o proprietario
-     * @return Una lista dei turni attualmente registrati
-     */
-    public List<Shift> consultShiftTable() throws UseCaseLogicException {
-        User user = CatERing.getInstance().getUserManager().getCurrentUser();
-        if (!user.isOrganizer() && !user.isOwner()) {
-            LOGGER.warning("User " + user.getUserName() + " is not authorized to consult shift table");
-            throw new UseCaseLogicException("User is not authorized to consult shift table");
-        }
-        
-        return CatERing.getInstance().getShiftManager().getShiftTable();
     }
 
     /**
@@ -462,6 +524,15 @@ public class StaffManager {
      */
     public Staff findStaffById(int id) {
         return Staff.loadById(id);
+    }
+
+    /**
+     * Ottiene tutto il personale per tipo di contratto (permanente o occasionale).
+     * @param permanent Se true, ottiene il personale permanente; se false, ottiene il personale occasionale.
+     * @return Lista del personale di quel tipo
+     */
+    public ArrayList<Staff> getStaffByPermanentStatus(boolean permanent) {
+        return Staff.loadByPermanentStatus(permanent);
     }
 
     /**

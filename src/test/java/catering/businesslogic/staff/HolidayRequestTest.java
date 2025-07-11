@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Test;
 
 import catering.businesslogic.CatERing;
 import catering.businesslogic.UseCaseLogicException;
-import catering.businesslogic.shift.Shift;
 import catering.businesslogic.user.User;
 import catering.persistence.PersistenceManager;
 import catering.util.LogManager;
@@ -387,7 +386,7 @@ public class HolidayRequestTest {
 
     @Test
     @Order(9)
-    void testConsultShiftTableScenario() {
+    void testConsultEvaluationNotes() {
         LOGGER.info("Testing shift table consultation scenario");
 
         try {
@@ -395,21 +394,20 @@ public class HolidayRequestTest {
             app.getUserManager().fakeLogin(organizer.getUserName());
 
             // Consult shift table (part of the use case scenarios)
-            List<Shift> shifts = app.getStaffManager().consultShiftTable();
+            List<EvaluationNote> notes = app.getStaffManager().consultAllEvaluationNotes();
 
             // Verify we can access shift information
-            assertNotNull(shifts, "Shift table should not be null");
-            assertTrue(shifts.size() >= 0, "Should be able to retrieve shift information");
+            assertNotNull(notes, "notes should not be null");
 
-            LOGGER.info("Successfully consulted shift table: " + shifts.size() + " shifts found");
+            LOGGER.info("Successfully consulted evaluation notes.");
 
-            // Test with owner as well
+            // Test with owner 
             app.getUserManager().fakeLogin(owner.getUserName());
             
-            List<Shift> ownerShifts = app.getStaffManager().consultShiftTable();
+            List<EvaluationNote> ownerShifts = app.getStaffManager().consultAllEvaluationNotes();
             assertNotNull(ownerShifts, "Owner should also be able to consult shift table");
 
-            LOGGER.info("Owner can also consult shift table: " + ownerShifts.size() + " shifts found");
+            LOGGER.info("Owner can also consult evaluation notes.");
 
         } catch (UseCaseLogicException e) {
             fail("Exception should not be thrown: " + e.getMessage());
