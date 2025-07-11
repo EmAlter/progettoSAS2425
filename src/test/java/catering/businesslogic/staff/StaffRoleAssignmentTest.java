@@ -92,19 +92,18 @@ public class StaffRoleAssignmentTest {
         }
     }
 
+    // Test per verificare la consultazione dei ruoli esistenti nel database.
     @Test
     @Order(1)
     void testConsultExistingRolesFromDatabase() {
         LOGGER.info("Testing consultation of existing roles from database");
 
         try {
-            // Login as organizer (authorized to consult roles)
+            // Login as organizer
             app.getUserManager().fakeLogin(organizer.getUserName());
 
-            // Select the test event
             app.getEventManager().selectEvent(testEvent);
 
-            // Get the event staff sheet with existing roles from database
             EventStaffSheet staffSheet = app.getEventManager().getCurrentEventStaffSheet();
             assertNotNull(staffSheet, "Event staff sheet should exist");
             
@@ -112,7 +111,6 @@ public class StaffRoleAssignmentTest {
             assertNotNull(allRoles, "Roles list should not be null");
             assertTrue(allRoles.size() > 0, "Should have existing roles from database");
 
-            // Log all existing roles for verification
             LOGGER.info("Found " + allRoles.size() + " existing roles in database:");
             for (Role role : allRoles) {
                 String assignmentStatus = role.isAssigned() ? 
@@ -120,7 +118,6 @@ public class StaffRoleAssignmentTest {
                 LOGGER.info("  - " + role.getDescription() + " (" + role.getType() + ") - " + assignmentStatus);
             }
 
-            // Verify we have roles for all job types
             long chefRoles = allRoles.stream().filter(r -> r.getType() == JobType.CHEF).count();
             long cookRoles = allRoles.stream().filter(r -> r.getType() == JobType.COOK).count();
             long serviceRoles = allRoles.stream().filter(r -> r.getType() == JobType.SERVICE).count();
@@ -129,7 +126,7 @@ public class StaffRoleAssignmentTest {
             assertTrue(cookRoles > 0, "Should have cook roles from database");
             assertTrue(serviceRoles > 0, "Should have service roles from database");
 
-            // Verify some roles are already assigned (from database)
+            // Verify some roles are already assigned
             List<Role> assignedRoles = staffSheet.getAssignedRoles();
             List<Role> unassignedRoles = staffSheet.getUnassignedRoles();
             
@@ -148,27 +145,25 @@ public class StaffRoleAssignmentTest {
         }
     }
 
+    // Test per assegnare il personale a ruoli esistenti non assegnati nel database.
     @Test
     @Order(2)
     void testAssignStaffToExistingUnassignedRoles() {
         LOGGER.info("Testing staff assignment to existing unassigned roles");
 
         try {
-            // Login as organizer (authorized to assign roles)
+            // Login as organizer
             app.getUserManager().fakeLogin(organizer.getUserName());
 
-            // Select the test event
             app.getEventManager().selectEvent(testEvent);
 
-            // Get the event staff sheet
             EventStaffSheet staffSheet = app.getEventManager().getCurrentEventStaffSheet();
             assertNotNull(staffSheet, "Event staff sheet should exist");
 
-            // Get existing unassigned roles from database
             List<Role> unassignedRoles = staffSheet.getUnassignedRoles();
             assertTrue(unassignedRoles.size() > 0, "Should have unassigned roles from database");
 
-            // Find specific unassigned roles by description (these exist in the DB init script)
+            // Find specific unassigned roles by description
             Role sousChefRole = staffSheet.findRole(JobType.CHEF, "Sous Chef");
             Role responsabileSalaRole = staffSheet.findRole(JobType.SERVICE, "Responsabile sala");
             Role cuocoPreparazioneAntipastiRole = staffSheet.findRole(JobType.COOK, "Cuoco preparazione antipasti");
@@ -182,10 +177,8 @@ public class StaffRoleAssignmentTest {
             assertFalse(responsabileSalaRole.isAssigned(), "Responsabile sala role should be unassigned initially");
             assertFalse(cuocoPreparazioneAntipastiRole.isAssigned(), "Cuoco preparazione antipasti role should be unassigned initially");
 
-            // Count initial assignments
             int initialAssignedCount = (int) staffSheet.countAssignedRoles();
 
-            // Assign staff to these existing roles using StaffManager
             app.getStaffManager().assignToRole(sousChefRole, testChef);
             app.getStaffManager().assignToRole(responsabileSalaRole, testServiceStaff);
             app.getStaffManager().assignToRole(cuocoPreparazioneAntipastiRole, additionalCook);
@@ -200,12 +193,10 @@ public class StaffRoleAssignmentTest {
             assertTrue(cuocoPreparazioneAntipastiRole.isAssigned(), "Cuoco preparazione antipasti role should be assigned");
             assertEquals(additionalCook, cuocoPreparazioneAntipastiRole.getAssignedStaff(), "Cuoco preparazione antipasti role should be assigned to additional cook");
 
-            // Verify assignments through staff sheet
             assertEquals(testChef, staffSheet.getStaffForRole(sousChefRole), "Staff sheet should return correct chef for sous chef");
             assertEquals(testServiceStaff, staffSheet.getStaffForRole(responsabileSalaRole), "Staff sheet should return correct service staff for responsabile sala");
             assertEquals(additionalCook, staffSheet.getStaffForRole(cuocoPreparazioneAntipastiRole), "Staff sheet should return correct cook for antipasti");
 
-            // Verify assignment counts increased
             assertEquals(initialAssignedCount + 3, staffSheet.countAssignedRoles(), "Should have 3 more assigned roles");
 
             LOGGER.info("Successfully assigned 3 staff members to existing unassigned roles:");
@@ -218,6 +209,7 @@ public class StaffRoleAssignmentTest {
         }
     }
 
+    // Test per rimuovere il personale da ruoli assegnati esistenti nel database.
     @Test
     @Order(3)
     void testRemoveStaffFromExistingAssignedRoles() {
@@ -227,14 +219,10 @@ public class StaffRoleAssignmentTest {
             // Login as organizer
             app.getUserManager().fakeLogin(organizer.getUserName());
 
-            // Select the test event
             app.getEventManager().selectEvent(testEvent);
 
-            // Get the event staff sheet
             EventStaffSheet staffSheet = app.getEventManager().getCurrentEventStaffSheet();
 
-            // Find existing assigned roles from the database
-            // Looking for "Chef responsabile" which should be assigned to staff ID 5 (Antonio Blu)
             Role chefResponsabileRole = staffSheet.findRole(JobType.CHEF, "Chef responsabile");
             assertNotNull(chefResponsabileRole, "Should find 'Chef responsabile' role from database");
             assertTrue(chefResponsabileRole.isAssigned(), "Chef responsabile role should be assigned initially");
@@ -248,23 +236,21 @@ public class StaffRoleAssignmentTest {
             // Count assignments before removal
             int initialAssignedCount = (int) staffSheet.countAssignedRoles();
 
-            // Remove staff from role using StaffManager
+            // Remove staff from role 
             app.getStaffManager().removeStaffFromRole(chefResponsabileRole);
 
             // Verify removal
             assertFalse(chefResponsabileRole.isAssigned(), "Role should not be assigned after removal");
             assertNull(chefResponsabileRole.getAssignedStaff(), "Role should not have assigned staff after removal");
 
-            // Verify through staff sheet
             assertNull(staffSheet.getStaffForRole(chefResponsabileRole), "Staff sheet should return null for unassigned role");
 
-            // Verify assignment count decreased
             assertEquals(initialAssignedCount - 1, staffSheet.countAssignedRoles(), "Assignment count should decrease by 1");
 
             LOGGER.info("Successfully removed " + originalAssignedStaff.getName() + 
                        " from role: " + chefResponsabileRole.getDescription());
 
-            // Test removing from another existing assigned role - "Cuoco principale antipasti"
+            // Another
             Role cuocoPrincipaleAntipastiRole = staffSheet.findRole(JobType.COOK, "Cuoco principale antipasti");
             if (cuocoPrincipaleAntipastiRole != null && cuocoPrincipaleAntipastiRole.isAssigned()) {
                 Staff assignedStaff = cuocoPrincipaleAntipastiRole.getAssignedStaff();
@@ -280,8 +266,9 @@ public class StaffRoleAssignmentTest {
         }
     }
 
+    // Test per verificare che il personale non autorizzato non possa assegnare ruoli.
     @Test
-    @Order(6)
+    @Order(4)
     void testUnauthorizedStaffCannotAssignRoles() {
         LOGGER.info("Testing unauthorized access to role assignment");
 
@@ -289,19 +276,14 @@ public class StaffRoleAssignmentTest {
             // Login as regular staff (not authorized)
             app.getUserManager().fakeLogin(regularStaff.getUserName());
 
-            // Select the test event
             app.getEventManager().selectEvent(testEvent);
 
-            // Get an existing unassigned role
             EventStaffSheet staffSheet = app.getEventManager().getCurrentEventStaffSheet();
             Role sousChefRole = staffSheet.findRole(JobType.CHEF, "Sous Chef");
 
             assertNotNull(sousChefRole, "Should have a sous chef role to test with");
 
-            // Make sure the role is unassigned for this test
             if (sousChefRole.isAssigned()) {
-                // We can't remove it as regular staff, so we'll need to test with what we have
-                // or find another unassigned role
                 List<Role> unassignedRoles = staffSheet.getUnassignedRoles();
                 if (!unassignedRoles.isEmpty()) {
                     sousChefRole = unassignedRoles.get(0);
@@ -310,7 +292,7 @@ public class StaffRoleAssignmentTest {
 
             final Role roleToTest = sousChefRole;
 
-            // Attempt to assign role should fail
+            // Should fail
             assertThrows(UseCaseLogicException.class, () -> {
                 app.getStaffManager().assignToRole(roleToTest, testChef);
             }, "Regular staff should not be able to assign roles");
@@ -322,8 +304,9 @@ public class StaffRoleAssignmentTest {
         }
     }
 
+    // Test per verificare la funzionalità di ricerca dei ruoli per tipo e descrizione.
     @Test
-    @Order(7)
+    @Order(5)
     void testFindRolesByTypeAndDescription() {
         LOGGER.info("Testing role finding functionality");
 
@@ -331,13 +314,11 @@ public class StaffRoleAssignmentTest {
             // Login as organizer
             app.getUserManager().fakeLogin(organizer.getUserName());
 
-            // Select the test event
             app.getEventManager().selectEvent(testEvent);
 
-            // Get the staff sheet
             EventStaffSheet staffSheet = app.getEventManager().getCurrentEventStaffSheet();
 
-            // Test finding existing roles by type and description (using actual DB roles)
+            // Test finding existing roles by type and description
             Role foundChefRole = staffSheet.findRole(JobType.CHEF, "Chef responsabile");
             assertNotNull(foundChefRole, "Should find existing 'Chef responsabile' role");
             assertEquals(JobType.CHEF, foundChefRole.getType(), "Should be CHEF type");
@@ -358,17 +339,14 @@ public class StaffRoleAssignmentTest {
             Role notFoundRole = staffSheet.findRole(JobType.COOK, "Ruolo Inesistente");
             assertNull(notFoundRole, "Should not find non-existent role");
 
-            // Test getting unassigned roles by type
             List<Role> unassignedCookRoles = staffSheet.getNotAssignedByType(JobType.COOK);
             List<Role> unassignedChefRoles = staffSheet.getNotAssignedByType(JobType.CHEF);
             List<Role> unassignedServiceRoles = staffSheet.getNotAssignedByType(JobType.SERVICE);
 
-            // Verify we have unassigned roles of each type
             assertTrue(unassignedCookRoles.size() >= 0, "Should have cook roles (assigned or unassigned)");
             assertTrue(unassignedChefRoles.size() >= 0, "Should have chef roles (assigned or unassigned)");
             assertTrue(unassignedServiceRoles.size() >= 0, "Should have service roles (assigned or unassigned)");
 
-            // Verify role types are correct
             for (Role role : unassignedCookRoles) {
                 assertEquals(JobType.COOK, role.getType(), "All cook roles should be COOK type");
                 assertFalse(role.isAssigned(), "All should be unassigned");
