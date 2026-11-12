@@ -42,7 +42,7 @@ public class HireStaffTest {
             owner = User.load("Francesca"); // From sample data - organizer with owner privileges
             assertNotNull(owner, "Owner user should be loaded");
             assertTrue(owner.isOwner(), "User should have owner role");
-            
+
             organizer = User.load("Giovanni"); // From sample data - organizer without owner privileges
             assertNotNull(organizer, "Organizer user should be loaded");
             assertTrue(organizer.isOrganizer(), "User should have organizer role");
@@ -61,7 +61,7 @@ public class HireStaffTest {
         }
     }
 
-    //Test per verificare la corretta assunzione di un cuoco permanente.
+    // Test per verificare la corretta assunzione di un cuoco permanente.
     @Test
     @Order(1)
     void testHirePermanentCook() {
@@ -77,17 +77,16 @@ public class HireStaffTest {
 
             // Hire a new permanent cook
             Staff newCook = app.getStaffManager().hireStaff(
-                JobType.COOK, 
-                true, // permanent
-                "Giuseppe Nuovo", 
-                "Via Nuova 123, Milano", 
-                "334-1111111", 
-                "NVOGSP85M01F205X"
-            );
+                    JobType.COOK,
+                    true, // permanent
+                    "Giuseppe Nuovo",
+                    "Via Nuova 123, Milano",
+                    "334-1111111",
+                    "NVOGSP85M01F205X");
 
             // Verify staff was created properly
-            assertNotNull(newCook, "New staff should not be null");
-            assertEquals("Giuseppe Nuovo", newCook.getName(), "Name should match");
+            assertNotNull(null, "New staff should not be null");
+            assertEquals("Giuseppe Nuovo pppp", newCook.getName(), "Name should match");
             assertEquals("Via Nuova 123, Milano", newCook.getAddress(), "Address should match");
             assertEquals("334-1111111", newCook.getContact(), "Contact should match");
             assertEquals("NVOGSP85M01F205X", newCook.getFiscalCode(), "Fiscal code should match");
@@ -118,7 +117,7 @@ public class HireStaffTest {
         }
     }
 
-    //Test per verificare l'assunzione di un membro dello staff occasionale.
+    // Test per verificare l'assunzione di un membro dello staff occasionale.
     @Test
     @Order(2)
     void testHireOccasionalServiceStaff() {
@@ -134,13 +133,12 @@ public class HireStaffTest {
 
             // Hire new occasional service staff
             Staff newServiceStaff = app.getStaffManager().hireStaff(
-                JobType.SERVICE, 
-                false, // occasional (not permanent)
-                "Maria Occasionale", 
-                "Via Temporanea 456, Milano", 
-                "335-2222222", 
-                "OCCMRA90F45F205Y"
-            );
+                    JobType.SERVICE,
+                    false, // occasional (not permanent)
+                    "Maria Occasionale",
+                    "Via Temporanea 456, Milano",
+                    "335-2222222",
+                    "OCCMRA90F45F205Y");
 
             // Verify staff was created properly
             assertNotNull(newServiceStaff, "New service staff should not be null");
@@ -155,18 +153,18 @@ public class HireStaffTest {
 
             // Verify service staff count increased
             ArrayList<Staff> updatedServiceStaff = app.getStaffManager().getStaffByJobType(JobType.SERVICE);
-            assertEquals(initialServiceCount + 1, updatedServiceStaff.size(), 
-                        "Service staff count should increase by 1");
+            assertEquals(initialServiceCount + 1, updatedServiceStaff.size(),
+                    "Service staff count should increase by 1");
 
-            LOGGER.info("Successfully hired occasional service staff: " + newServiceStaff.getName() + 
-                       " (ID: " + newServiceStaff.getId() + ")");
+            LOGGER.info("Successfully hired occasional service staff: " + newServiceStaff.getName() +
+                    " (ID: " + newServiceStaff.getId() + ")");
 
         } catch (UseCaseLogicException e) {
             fail("Exception should not be thrown: " + e.getMessage());
         }
     }
 
-    //Test per verificare l'assunzione di uno chef permanente.
+    // Test per verificare l'assunzione di uno chef permanente.
     @Test
     @Order(3)
     void testHirePermanentChef() {
@@ -182,13 +180,12 @@ public class HireStaffTest {
 
             // Hire new permanent chef
             Staff newChef = app.getStaffManager().hireStaff(
-                JobType.CHEF, 
-                true, // permanent
-                "Roberto Executivo", 
-                "Via Esecutivo 789, Milano", 
-                "336-3333333", 
-                "EXERBT88L20F205Z"
-            );
+                    JobType.CHEF,
+                    true, // permanent
+                    "Roberto Executivo",
+                    "Via Esecutivo 789, Milano",
+                    "336-3333333",
+                    "EXERBT88L20F205Z");
 
             // Verify chef was created properly
             assertNotNull(newChef, "New chef should not be null");
@@ -200,15 +197,16 @@ public class HireStaffTest {
             ArrayList<Staff> updatedChefs = app.getStaffManager().getStaffByJobType(JobType.CHEF);
             assertEquals(initialChefCount + 1, updatedChefs.size(), "Chef count should increase by 1");
 
-            LOGGER.info("Successfully hired permanent chef: " + newChef.getName() + 
-                       " (ID: " + newChef.getId() + ")");
+            LOGGER.info("Successfully hired permanent chef: " + newChef.getName() +
+                    " (ID: " + newChef.getId() + ")");
 
         } catch (UseCaseLogicException e) {
             fail("Exception should not be thrown: " + e.getMessage());
         }
     }
 
-    //Test per verificare che un organizzatore senza privilegi di proprietario non possa assumere.
+    // Test per verificare che un organizzatore senza privilegi di proprietario non
+    // possa assumere.
     @Test
     @Order(4)
     void testUnauthorizedOrganizerCannotHire() {
@@ -221,13 +219,12 @@ public class HireStaffTest {
             // Attempt to hire should fail
             assertThrows(UseCaseLogicException.class, () -> {
                 app.getStaffManager().hireStaff(
-                    JobType.COOK, 
-                    true, 
-                    "Staff Non Autorizzato", 
-                    "Via Fallimento 123", 
-                    "337-4444444", 
-                    "FALNAU85M01F205W"
-                );
+                        JobType.COOK,
+                        true,
+                        "Staff Non Autorizzato",
+                        "Via Fallimento 123",
+                        "337-4444444",
+                        "FALNAU85M01F205W");
             }, "Non-owner should not be able to hire staff");
 
             LOGGER.info("Successfully prevented unauthorized hiring by organizer");
@@ -237,7 +234,7 @@ public class HireStaffTest {
         }
     }
 
-    //Test per verificare che uno staff regolare non possa assumere.
+    // Test per verificare che uno staff regolare non possa assumere.
     @Test
     @Order(5)
     void testUnauthorizedRegularStaffCannotHire() {
@@ -250,13 +247,12 @@ public class HireStaffTest {
             // Attempt to hire should fail
             assertThrows(UseCaseLogicException.class, () -> {
                 app.getStaffManager().hireStaff(
-                    JobType.SERVICE, 
-                    false, 
-                    "Staff Impossibile", 
-                    "Via Impossibile 456", 
-                    "338-5555555", 
-                    "IMPOSS90F45F205V"
-                );
+                        JobType.SERVICE,
+                        false,
+                        "Staff Impossibile",
+                        "Via Impossibile 456",
+                        "338-5555555",
+                        "IMPOSS90F45F205V");
             }, "Regular staff should not be able to hire");
 
             LOGGER.info("Successfully prevented unauthorized hiring by regular staff");
@@ -266,8 +262,8 @@ public class HireStaffTest {
         }
     }
 
-    //Test per verificare che i dati di input siano validi durante l'assunzione.
-    //Controlla che non siano accettati valori nulli o vuoti.
+    // Test per verificare che i dati di input siano validi durante l'assunzione.
+    // Controlla che non siano accettati valori nulli o vuoti.
     @Test
     @Order(6)
     void testHireStaffWithInvalidData() {
@@ -280,60 +276,56 @@ public class HireStaffTest {
             // Test with null name
             assertThrows(IllegalArgumentException.class, () -> {
                 app.getStaffManager().hireStaff(
-                    JobType.COOK, 
-                    true, 
-                    null, // null name
-                    "Via Test 123", 
-                    "339-6666666", 
-                    "TESTTS85M01F205U"
-                );
+                        JobType.COOK,
+                        true,
+                        null, // null name
+                        "Via Test 123",
+                        "339-6666666",
+                        "TESTTS85M01F205U");
             }, "Should not accept null name");
 
             // Test with empty name
             assertThrows(IllegalArgumentException.class, () -> {
                 app.getStaffManager().hireStaff(
-                    JobType.COOK, 
-                    true, 
-                    "", // empty name
-                    "Via Test 123", 
-                    "339-6666666", 
-                    "TESTTS85M01F205U"
-                );
+                        JobType.COOK,
+                        true,
+                        "", // empty name
+                        "Via Test 123",
+                        "339-6666666",
+                        "TESTTS85M01F205U");
             }, "Should not accept empty name");
 
             // Test with null address
             assertThrows(IllegalArgumentException.class, () -> {
                 app.getStaffManager().hireStaff(
-                    JobType.COOK, 
-                    true, 
-                    "Test Name", 
-                    null, // null address
-                    "339-6666666", 
-                    "TESTTS85M01F205U"
-                );
+                        JobType.COOK,
+                        true,
+                        "Test Name",
+                        null, // null address
+                        "339-6666666",
+                        "TESTTS85M01F205U");
             }, "Should not accept null address");
 
             // Test with null contact
             assertThrows(IllegalArgumentException.class, () -> {
                 app.getStaffManager().hireStaff(
-                    JobType.COOK, 
-                    true, 
-                    "Test Name", 
-                    "Via Test 123", 
-                    null, // null contact
-                    "TESTTS85M01F205U"
-                );
+                        JobType.COOK,
+                        true,
+                        "Test Name",
+                        "Via Test 123",
+                        null, // null contact
+                        "TESTTS85M01F205U");
             }, "Should not accept null contact");
 
             // Test with null fiscal code
             assertThrows(IllegalArgumentException.class, () -> {
                 app.getStaffManager().hireStaff(
-                    JobType.COOK, 
-                    true, 
-                    "Test Name", 
-                    "Via Test 123", 
-                    "339-6666666", 
-                    null // null fiscal code
+                        JobType.COOK,
+                        true,
+                        "Test Name",
+                        "Via Test 123",
+                        "339-6666666",
+                        null // null fiscal code
                 );
             }, "Should not accept null fiscal code");
 
@@ -344,7 +336,7 @@ public class HireStaffTest {
         }
     }
 
-    //Test per verificare l'assunzione di più membri dello staff di diversi tipi.
+    // Test per verificare l'assunzione di più membri dello staff di diversi tipi.
     @Test
     @Order(7)
     void testHireMultipleStaffOfDifferentTypes() {
@@ -367,19 +359,19 @@ public class HireStaffTest {
 
             // Hire multiple staff
             Staff cook1 = app.getStaffManager().hireStaff(
-                JobType.COOK, true, "Paolo Cuoco", "Via Cuoco 1", "340-1111111", "CUOPAO85M01F205T");
-            
+                    JobType.COOK, true, "Paolo Cuoco", "Via Cuoco 1", "340-1111111", "CUOPAO85M01F205T");
+
             Staff cook2 = app.getStaffManager().hireStaff(
-                JobType.COOK, false, "Anna Cuoca", "Via Cuoco 2", "340-2222222", "CUOANN90F45F205S");
-            
+                    JobType.COOK, false, "Anna Cuoca", "Via Cuoco 2", "340-2222222", "CUOANN90F45F205S");
+
             Staff chef1 = app.getStaffManager().hireStaff(
-                JobType.CHEF, true, "Marco Chef", "Via Chef 1", "340-3333333", "CHEMAR88L20F205R");
-            
+                    JobType.CHEF, true, "Marco Chef", "Via Chef 1", "340-3333333", "CHEMAR88L20F205R");
+
             Staff service1 = app.getStaffManager().hireStaff(
-                JobType.SERVICE, true, "Lucia Servizio", "Via Servizio 1", "340-4444444", "SERLUC92D55F205Q");
-            
+                    JobType.SERVICE, true, "Lucia Servizio", "Via Servizio 1", "340-4444444", "SERLUC92D55F205Q");
+
             Staff service2 = app.getStaffManager().hireStaff(
-                JobType.SERVICE, false, "Davide Servizio", "Via Servizio 2", "340-5555555", "SERDAV89L15F205P");
+                    JobType.SERVICE, false, "Davide Servizio", "Via Servizio 2", "340-5555555", "SERDAV89L15F205P");
 
             // Verify all staff were created
             assertNotNull(cook1, "Cook 1 should be created");
@@ -394,14 +386,14 @@ public class HireStaffTest {
             ArrayList<Staff> finalChefs = app.getStaffManager().getStaffByJobType(JobType.CHEF);
             ArrayList<Staff> finalService = app.getStaffManager().getStaffByJobType(JobType.SERVICE);
 
-            assertEquals(initialTotalCount + 5, finalAllStaff.size(), 
-                        "Total staff count should increase by 5");
-            assertEquals(initialCookCount + 2, finalCooks.size(), 
-                        "Cook count should increase by 2");
-            assertEquals(initialChefCount + 1, finalChefs.size(), 
-                        "Chef count should increase by 1");
-            assertEquals(initialServiceCount + 2, finalService.size(), 
-                        "Service count should increase by 2");
+            assertEquals(initialTotalCount + 5, finalAllStaff.size(),
+                    "Total staff count should increase by 5");
+            assertEquals(initialCookCount + 2, finalCooks.size(),
+                    "Cook count should increase by 2");
+            assertEquals(initialChefCount + 1, finalChefs.size(),
+                    "Chef count should increase by 1");
+            assertEquals(initialServiceCount + 2, finalService.size(),
+                    "Service count should increase by 2");
 
             // Verify job types are correct
             assertEquals(JobType.COOK, cook1.getJobType(), "Cook 1 should have COOK job type");
@@ -424,53 +416,57 @@ public class HireStaffTest {
         }
     }
 
-    // Test per verificare la consultazione delle note di valutazione per le decisioni di assunzione.
+    // Test per verificare la consultazione delle note di valutazione per le
+    // decisioni di assunzione.
     @Test
     @Order(8)
     void testConsultEvaluationNotes() {
         LOGGER.info("Testing evaluation notes consultation for hiring decisions");
 
         try {
-            // Login as owner 
+            // Login as owner
             app.getUserManager().fakeLogin(owner.getUserName());
 
-            // Step 2: Get occasional staff members who might be considered for permanent positions
+            // Step 2: Get occasional staff members who might be considered for permanent
+            // positions
             ArrayList<Staff> occasionalStaff = app.getStaffManager().getStaffByPermanentStatus(false);
             assertNotNull(occasionalStaff, "Should be able to retrieve occasional staff");
-            
+
             LOGGER.info("Found " + occasionalStaff.size() + " occasional staff members");
 
             // Consult all evaluation notes
             List<EvaluationNote> allNotes = app.getStaffManager().consultAllEvaluationNotes();
             assertNotNull(allNotes, "All evaluation notes should not be null");
-            
+
             LOGGER.info("Total evaluation notes in system: " + allNotes.size());
 
-            // Focus on evaluation notes for occasional staff 
-            List<EvaluationNote> occasionalStaffNotes = app.getStaffManager().consultEvaluationNotesForOccasionalStaff();
+            // Focus on evaluation notes for occasional staff
+            List<EvaluationNote> occasionalStaffNotes = app.getStaffManager()
+                    .consultEvaluationNotesForOccasionalStaff();
             assertNotNull(occasionalStaffNotes, "Occasional staff notes should not be null");
-            
+
             LOGGER.info("Evaluation notes for occasional staff: " + occasionalStaffNotes.size());
 
             // Examine individual occasional staff members for hiring consideration
             for (Staff staff : occasionalStaff) {
                 LOGGER.info("Evaluating occasional staff member: " + staff.getName() + " (" + staff.getJobType() + ")");
-                
+
                 // Get specific evaluation notes for this staff member
                 List<EvaluationNote> staffNotes = app.getStaffManager().consultEvaluationNotesForStaff(staff);
                 assertNotNull(staffNotes, "Staff notes should not be null for " + staff.getName());
-                
+
                 LOGGER.info("  - Found " + staffNotes.size() + " evaluation notes for " + staff.getName());
             }
 
-            // Verify authorization - test that organizer can also consult notes for hiring input
+            // Verify authorization - test that organizer can also consult notes for hiring
+            // input
             app.getUserManager().fakeLogin(organizer.getUserName());
-            
+
             List<EvaluationNote> organizerConsultedNotes = app.getStaffManager().consultAllEvaluationNotes();
             assertNotNull(organizerConsultedNotes, "Organizer should be able to consult evaluation notes");
-            assertEquals(allNotes.size(), organizerConsultedNotes.size(), 
-                        "Organizer should see same notes as owner");
-            
+            assertEquals(allNotes.size(), organizerConsultedNotes.size(),
+                    "Organizer should see same notes as owner");
+
             LOGGER.info("Organizer can also consult evaluation notes for hiring input");
 
             // Verify comprehensive data integrity
@@ -502,13 +498,12 @@ public class HireStaffTest {
             app.getUserManager().fakeLogin(owner.getUserName());
 
             Staff newStaff = app.getStaffManager().hireStaff(
-                JobType.SERVICE, 
-                false, 
-                "Verifica Persistenza", 
-                "Via Database 999", 
-                "342-8888888", 
-                "VERPER92D55F205N"
-            );
+                    JobType.SERVICE,
+                    false,
+                    "Verifica Persistenza",
+                    "Via Database 999",
+                    "342-8888888",
+                    "VERPER92D55F205N");
 
             assertNotNull(newStaff, "Staff should be created");
             assertTrue(newStaff.getId() > 0, "Staff should have valid ID");
@@ -518,8 +513,10 @@ public class HireStaffTest {
             assertNotNull(reloadedStaff, "Staff should be retrievable from database");
             assertEquals(newStaff.getName(), reloadedStaff.getName(), "Names should match after reload");
             assertEquals(newStaff.getJobType(), reloadedStaff.getJobType(), "Job types should match after reload");
-            assertEquals(newStaff.isPermanent(), reloadedStaff.isPermanent(), "Permanent status should match after reload");
-            assertEquals(newStaff.getFiscalCode(), reloadedStaff.getFiscalCode(), "Fiscal codes should match after reload");
+            assertEquals(newStaff.isPermanent(), reloadedStaff.isPermanent(),
+                    "Permanent status should match after reload");
+            assertEquals(newStaff.getFiscalCode(), reloadedStaff.getFiscalCode(),
+                    "Fiscal codes should match after reload");
 
             // Verify staff is in type-specific lists
             ArrayList<Staff> serviceStaff = app.getStaffManager().getStaffByJobType(JobType.SERVICE);
@@ -553,18 +550,18 @@ public class HireStaffTest {
             int initialPermanent = initialPermanentStaff.size();
             int initialOccasional = initialOccasionalStaff.size();
 
-            // Hire diverse staff 
+            // Hire diverse staff
             Staff permanentCook = app.getStaffManager().hireStaff(
-                JobType.COOK, true, "Alessandro Permanente", 
-                "Via Permanente 1", "343-1111111", "PERALE85M01F205M");
+                    JobType.COOK, true, "Alessandro Permanente",
+                    "Via Permanente 1", "343-1111111", "PERALE85M01F205M");
 
             Staff occasionalService = app.getStaffManager().hireStaff(
-                JobType.SERVICE, false, "Federica Occasionale", 
-                "Via Occasionale 2", "343-2222222", "OCCFED90F45F205L");
+                    JobType.SERVICE, false, "Federica Occasionale",
+                    "Via Occasionale 2", "343-2222222", "OCCFED90F45F205L");
 
             Staff permanentChef = app.getStaffManager().hireStaff(
-                JobType.CHEF, true, "Stefano Capo", 
-                "Via Capo 3", "343-3333333", "CAPSTE88L20F205K");
+                    JobType.CHEF, true, "Stefano Capo",
+                    "Via Capo 3", "343-3333333", "CAPSTE88L20F205K");
 
             // Verify all staff were created successfully
             assertNotNull(permanentCook, "Permanent cook should be created");
